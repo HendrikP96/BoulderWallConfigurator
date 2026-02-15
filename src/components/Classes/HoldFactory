@@ -1,0 +1,13 @@
+Static HoldFactory 
+
+// Klasse die dafür zuständig ist, die Hold-Prototypen zu verwalten. Sie speichert Informationen über die verschiedenen Hold-Typen und deren Eigenschaften. Sie ermöglicht es, neue Hold-Instanzen zu erstellen und sie auf den BoltHoles der Wand zu platzieren. 
+
+Kennt Prefab-Klassen der Holds 
+Array vom Typ Hold mit Anzahl der gesamten Holds. In jedem wird ein Prefab abgespeichert 
+
+generiert Instanzen der Holds 
+
+wird von Raytracer und UI angesprochen. um Hold am BoltHole zu erstellen. 
+
+
+Methode CreateHold(Farbe, Typ)
