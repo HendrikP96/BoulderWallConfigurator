@@ -1,7 +1,0 @@
-Klasse WallElement
-
-
-// EinzelnesElement einer Wand 
-
-Attribute: 
-Array[][] BoltHole; // Liste der BoltHoles in diesem WandElement

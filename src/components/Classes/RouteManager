@@ -1,5 +1,0 @@
-Klasse RouteManager
-
-// Die Klasse RouteManager ist dafür zuständig, die Routen auf der Wand zu verwalten. Sie speichert Informationen über die Position der Griffe, die Schwierigkeit der Route und andere relevante Daten. Sie ermöglicht es, Routen hinzuzufügen, zu entfernen und zu bearbeiten. Sie regelt die Logik, um sicherzustellen, dass die Routen konsistent sind und keine unlösbaren Konfigurationen entstehen. Regelt die Constraints, z.B. dass die Griffe einer Route nicht zu weit auseinander liegen dürfen, um eine realistische Kletterroute zu gewährleisten. Sie liefert nur Informationen über die Constraints und liefert diese an das UI. 
-
-// Sie kommuniziert mit der Wall-Klasse 

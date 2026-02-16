@@ -1,5 +1,0 @@
-Klasse Wallbuilder
-
-// Klasse die dafür zuständig ist aus mehreren WallElements eine Wand zu bauen. Sie kümmert sich darum, an den Außenseiten weitere Wall-Elemente hinzuzuzufügen. Sie regelt dabei welche Winkel zulässig sind, um z.B. Überhänge zu ermöglichen.  
-
-// Diese Klasse stellt sicher, dass mehrere Wall-Elemente so angeordnet werden, dass sie eine durchgehende Wand ergeben. Sie regelt die Logik, um sicherzustellen, dass die Elemente korrekt ausgerichtet sind und keine Lücken oder Überlappungen entstehen. Sie ermöglicht es, verschiedene Wandkonfigurationen zu erstellen, z.B. gerade Wände, Überhänge oder schräge Wände. Sie kommuniziert mit der Wall-Klasse, um die endgültige Wandstruktur zu erstellen und zu aktualisieren.

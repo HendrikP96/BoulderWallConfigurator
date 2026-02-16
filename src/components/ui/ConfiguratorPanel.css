@@ -1,0 +1,311 @@
+/* =========================================
+   Configurator Panel Styles
+   ========================================= */
+
+.configurator-panel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 280px;
+  max-height: calc(100vh - 20px);
+  background: rgba(30, 30, 40, 0.95);
+  border-radius: 12px;
+  padding: 16px;
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.panel-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.panel-section {
+  margin-bottom: 20px;
+}
+
+.panel-section h3 {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* =========================================
+   Wall Type Selector
+   ========================================= */
+
+.wall-type-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.wall-type-item {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.wall-type-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.wall-type-item.selected {
+  border-color: #4ECDC4;
+  background: rgba(78, 205, 196, 0.15);
+}
+
+.wall-type-preview {
+  width: 100%;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.wall-type-name {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* =========================================
+   Hold Type Selector
+   ========================================= */
+
+.hold-type-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.hold-type-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.hold-type-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.hold-type-item.selected {
+  border-color: #4ECDC4;
+  background: rgba(78, 205, 196, 0.15);
+}
+
+.hold-preview-canvas {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hold-type-name {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* =========================================
+   Color Picker
+   ========================================= */
+
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-item {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.color-item:hover {
+  transform: scale(1.1);
+}
+
+.color-item.selected {
+  border-color: white;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* =========================================
+   Route Panel
+   ========================================= */
+
+.route-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.route-create {
+  display: flex;
+  gap: 8px;
+}
+
+.route-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: white;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.route-input:focus {
+  border-color: #4ECDC4;
+}
+
+.route-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.route-create-btn {
+  width: 36px;
+  height: 36px;
+  background: #4ECDC4;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.route-create-btn:hover:not(:disabled) {
+  background: #3dbdb5;
+}
+
+.route-create-btn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  cursor: not-allowed;
+}
+
+.route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.route-empty {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  padding: 10px;
+}
+
+.route-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.route-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.route-item.active {
+  border-color: #4ECDC4;
+  background: rgba(78, 205, 196, 0.15);
+}
+
+.route-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.route-name {
+  flex: 1;
+  font-size: 13px;
+  color: white;
+}
+
+.route-hold-count {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.route-deselect-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.route-deselect-btn:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: white;
+}
+
+/* =========================================
+   Scrollbar Styling
+   ========================================= */
+
+.configurator-panel::-webkit-scrollbar,
+.route-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.configurator-panel::-webkit-scrollbar-track,
+.route-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.configurator-panel::-webkit-scrollbar-thumb,
+.route-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.configurator-panel::-webkit-scrollbar-thumb:hover,
+.route-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

@@ -1,3 +1,0 @@
-Klasse InteractionManager
-
-// Die Klasse InteractionManager ist dafür zuständig, die Interaktionen zwischen den verschiedenen Komponenten der Anwendung zu koordinieren. Sie fungiert als zentrale Anlaufstelle für die Kommunikation zwischen der Wall-Klasse, der HoldFactory, dem RouteManager und anderen relevanten Klassen. Sie regelt die Logik, um sicherzustellen, dass die verschiedenen Komponenten korrekt miteinander interagieren und dass die Benutzerinteraktionen reibungslos ablaufen. Sie ermöglicht es, neue Griffe auf der Wand zu platzieren, Routen zu erstellen und zu bearbeiten sowie andere relevante Aktionen durchzuführen. Sie kommuniziert mit dem UI, um die Benutzerinteraktionen zu verarbeiten und die entsprechenden Aktionen auszulösen.
