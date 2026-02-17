@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import Hold from './Hold.js';
-import EventBus from '../../engine/EventBus.js';
+import Hold from '../entities/Hold.js';
+import EventBus from '../engine/EventBus.js';
 
 let instance = null;
 

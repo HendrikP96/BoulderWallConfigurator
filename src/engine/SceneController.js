@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-import WallBuilder from "../components/Classes/WallBuilder.js";
-import HoldManager from "../components/Classes/HoldManager.js";
-import RouteManager from "../components/Classes/RouteManager.js";
+import WallBuilder from "../managers/WallBuilder.js";
+import HoldManager from "../managers/HoldManager.js";
+import RouteManager from "../managers/RouteManager.js";
 import InputManager from "./InputManager.js";
 import DemoHall from "./DemoHall.js";
 

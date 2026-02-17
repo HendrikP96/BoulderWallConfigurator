@@ -1,7 +1,7 @@
-import Wall from './Wall.js';
-import WallElement from './WallElement.js';
-import ConstraintManager from './constraints/ConstraintManager.js';
-import WallAngleConstraint from './constraints/WallAngleConstraint.js';
+import Wall from '../entities/Wall.js';
+import WallElement from '../entities/WallElement.js';
+import ConstraintManager from '../constraints/ConstraintManager.js';
+import WallAngleConstraint from '../constraints/WallAngleConstraint.js';
 
 /**
  * WallBuilder - Baut Wände aus mehreren WallElements.

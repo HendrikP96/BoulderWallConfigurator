@@ -1,5 +1,5 @@
-import { BoulderRoute } from './BoulderRoute.js';
-import EventBus from '../../engine/EventBus.js';
+import { BoulderRoute } from '../entities/BoulderRoute.js';
+import EventBus from '../engine/EventBus.js';
 
 class RouteManager {
 

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import EventBus from '../../engine/EventBus.js';
+import EventBus from '../engine/EventBus.js';
 
 let WALL_TEXTURES = {
   classic: {
@@ -187,6 +187,3 @@ class Wall {
 }
 
 export default Wall;
-
-
-
