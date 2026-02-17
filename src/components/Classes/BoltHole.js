@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import SphereCollider from "./SphereCollider.js";
-import HoldFactory from "./HoldFactory.js";
+import HoldManager from "./HoldManager.js";
 
 /**
  * BoltHole - Bohrloch auf einer Kletterwand. 
@@ -12,15 +12,12 @@ class BoltHole {
     this.position = position;
     this.hold = hold || null;
     this.holeRadius = 0.004;    
-    this.holeDepth = 0.01;
+    this.holeDepth = 0.005;
     this.hoverColor = "#4ECDC4";  
     this.HoleColor = "#1a1a1a";
     this.isHovered = false;
 
-    // Collider für Raycasting
     this.collider = new SphereCollider(this, 0.07);
-
-    // Mesh direkt erstellen
     this.mesh = this.createMesh();
   }
 
@@ -44,7 +41,6 @@ class BoltHole {
       this.position.z
     );
 
-    // Collider als Child
     let colliderPos = { x: 0, y: 0, z: 0 };
     let colliderMesh = this.collider.createMesh(colliderPos);
     if (colliderMesh !== null) {
@@ -54,22 +50,14 @@ class BoltHole {
     return mesh;
   }
 
-  getMesh() {
-    return this.mesh;
-  }
-
-  getCollider() {
-    return this.collider;
-  }
-
   onClick() {
     if (this.isEmpty() === false) {
       return;
     }
 
-    let holdFactory = HoldFactory.getInstance();
-    if (holdFactory !== null) {
-      holdFactory.placeHoldAt(this);
+    let holdManager = HoldManager.getInstance();
+    if (holdManager !== null) {
+      holdManager.placeHoldAt(this);
     }
   }
 
@@ -80,18 +68,18 @@ class BoltHole {
       return;
     }
 
-    let holdFactory = HoldFactory.getInstance();
-    if (holdFactory !== null) {
-      holdFactory.showPreviewAt(this);
+    let holdManager = HoldManager.getInstance();
+    if (holdManager !== null) {
+      holdManager.showPreviewAt(this);
     }
   }
 
   onHoverExit() {
     this.setHovered(false);
 
-    let holdFactory = HoldFactory.getInstance();
-    if (holdFactory !== null) {
-      holdFactory.hidePreview();
+    let holdManager = HoldManager.getInstance();
+    if (holdManager !== null) {
+      holdManager.hidePreview();
     }
   }
 
@@ -109,41 +97,6 @@ class BoltHole {
     this.mesh.material.color.set(color);
   }
 
-  disposeMesh() {
-    if (this.mesh !== null) {
-      this.mesh.geometry.dispose();
-      this.mesh.material.dispose();
-      this.mesh = null;
-    }
-
-    if (this.collider !== null) {
-      this.collider.dispose();
-    }
-  }
-
-  getPosition() {
-    return this.position;
-  }
-
-  getHold() {
-    return this.hold;
-  }
-
-  setPosition(position) {
-    this.position = position;
-  }
-
-  setHold(hold) {
-    this.hold = hold;
-  }
-
-  isEmpty() {
-    if (this.hold === null) {
-      return true;
-    }
-    return false;
-  }
-
   snapHold(hold) {
     if (this.isEmpty() === false) {
       return false;
@@ -157,6 +110,51 @@ class BoltHole {
     let removedHold = this.hold;
     this.hold = null;
     return removedHold;
+  }
+
+  disposeMesh() {
+    if (this.mesh !== null) {
+      this.mesh.geometry.dispose();
+      this.mesh.material.dispose();
+      this.mesh = null;
+    }
+
+    if (this.collider !== null) {
+      this.collider.dispose();
+    }
+  }
+
+  // --- Getter / Setter ---
+
+  getMesh() {
+    return this.mesh;
+  }
+
+  getCollider() {
+    return this.collider;
+  }
+
+  getPosition() {
+    return this.position;
+  }
+
+  setPosition(position) {
+    this.position = position;
+  }
+
+  getHold() {
+    return this.hold;
+  }
+
+  setHold(hold) {
+    this.hold = hold;
+  }
+
+  isEmpty() {
+    if (this.hold === null) {
+      return true;
+    }
+    return false;
   }
 }
 

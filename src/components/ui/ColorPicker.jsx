@@ -6,13 +6,11 @@
 
 const ROUTE_COLORS = [
   { id: 'red', hex: '#FF6B6B', name: 'Rot' },
-  { id: 'turquoise', hex: '#4ECDC4', name: 'Türkis' },
   { id: 'yellow', hex: '#FFE66D', name: 'Gelb' },
-  { id: 'purple', hex: '#6C5CE7', name: 'Violett' },
-  { id: 'green', hex: '#00B894', name: 'Grün' },
-  { id: 'orange', hex: '#FF9F43', name: 'Orange' },
-  { id: 'pink', hex: '#FD79A8', name: 'Pink' },
   { id: 'blue', hex: '#0984E3', name: 'Blau' },
+  { id: 'orange', hex: '#FF9F43', name: 'Orange' },
+  { id: 'purple', hex: '#6C5CE7', name: 'Violett' },
+  { id: 'green', hex: '#2ECC71', name: 'Grün' },
 ]
 
 function ColorPicker({ selectedColor, onSelect }) {

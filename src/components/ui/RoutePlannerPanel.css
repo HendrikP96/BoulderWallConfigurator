@@ -1,0 +1,364 @@
+/* =========================================
+   Route Planner Panel - Links
+   ========================================= */
+
+.route-planner-panel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 320px;
+  max-height: calc(100vh - 20px);
+  background: rgba(30, 30, 40, 0.95);
+  border-radius: 12px;
+  padding: 16px;
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.route-planner-header {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.route-planner-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.route-planner-subtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 4px 0 0 0;
+}
+
+.route-planner-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(78, 205, 196, 0.1);
+  border: 1px solid rgba(78, 205, 196, 0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.info-icon {
+  color: #4ECDC4;
+  font-size: 14px;
+}
+
+/* =========================================
+   Route List
+   ========================================= */
+
+.route-planner-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  min-height: 100px;
+}
+
+.route-planner-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.route-planner-empty p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
+.empty-hint {
+  font-size: 12px !important;
+  margin-top: 8px !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* =========================================
+   Route Item
+   ========================================= */
+
+.route-planner-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.route-planner-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.route-planner-item.selected {
+  border-color: #4ECDC4;
+  background: rgba(78, 205, 196, 0.1);
+}
+
+.route-planner-item.complete {
+  border-color: #27ae60;
+}
+
+.route-planner-item.complete.selected {
+  border-color: #4ECDC4;
+}
+
+.route-planner-item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.route-planner-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.route-planner-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: text;
+}
+
+.route-planner-name-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid #4ECDC4;
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+}
+
+.route-planner-hold-count {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.route-planner-status {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+}
+
+.route-planner-status.complete {
+  color: #27ae60;
+}
+
+.route-planner-status.incomplete {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.route-planner-expand-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 10px;
+  transition: color 0.2s;
+}
+
+.route-planner-expand-btn:hover {
+  color: white;
+}
+
+.route-planner-edit-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 14px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.route-planner-edit-btn:hover {
+  opacity: 1;
+}
+
+/* =========================================
+   Route Details (Expanded)
+   ========================================= */
+
+.route-planner-details {
+  padding: 0 12px 12px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0;
+  padding-top: 12px;
+}
+
+.route-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.detail-label {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.detail-value {
+  color: white;
+  font-weight: 500;
+}
+
+.route-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-section-title {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.constraint-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.constraint-item.fulfilled {
+  color: #27ae60;
+}
+
+.constraint-item.missing {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.constraint-icon {
+  width: 16px;
+  text-align: center;
+}
+
+/* =========================================
+   Summary Footer
+   ========================================= */
+
+.route-planner-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.summary-divider {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* =========================================
+   Scrollbar
+   ========================================= */
+
+.route-planner-panel::-webkit-scrollbar,
+.route-planner-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.route-planner-panel::-webkit-scrollbar-track,
+.route-planner-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.route-planner-panel::-webkit-scrollbar-thumb,
+.route-planner-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.route-planner-panel::-webkit-scrollbar-thumb:hover,
+.route-planner-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* =========================================
+   Route Clear Button
+   ========================================= */
+
+.route-clear-btn {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 12px;
+  background: rgba(231, 76, 60, 0.2);
+  border: 1px solid rgba(231, 76, 60, 0.5);
+  border-radius: 6px;
+  color: #e74c3c;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.route-clear-btn:hover {
+  background: rgba(231, 76, 60, 0.3);
+  border-color: #e74c3c;
+}
+
+/* =========================================
+   Route Visibility Button
+   ========================================= */
+
+.route-planner-visibility-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.route-planner-visibility-btn:hover {
+  color: white;
+}

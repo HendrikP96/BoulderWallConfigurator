@@ -5,7 +5,7 @@ import EventBus from '../../engine/EventBus.js';
 
 let instance = null;
 
-class HoldFactory {
+class HoldManager {
 
   constructor() {
     if (instance !== null) {
@@ -23,6 +23,7 @@ class HoldFactory {
     this.previewParent = null;
     this.selectedType = 1;
     this.selectedColor = "#FF6B6B";
+    this.selectedScale = 0.5;
 
     this.holdScale = 0.5;
     this.holdZOffset = 0.00;
@@ -62,6 +63,11 @@ class HoldFactory {
 
     this.eventBus.on("ui:toolChanged", function(data) {
       self.currentTool = data.tool;
+      self.emitSettings();
+    });
+
+    this.eventBus.on("ui:scaleChanged", function(data) {
+      self.selectedScale = data.scale;
       self.emitSettings();
     });
 
@@ -216,7 +222,7 @@ class HoldFactory {
       typeId = this.holdTypes[0];
     }
 
-    let hold = new Hold(typeId, color);
+    let hold = new Hold(typeId, color, this.selectedScale);
     this.createdHolds.push(hold);
     
     return hold;
@@ -236,7 +242,7 @@ class HoldFactory {
     }
 
     prefab.position.set(0, 0, this.holdZOffset);
-    prefab.scale.set(this.holdScale, this.holdScale, this.holdScale);
+    prefab.scale.set(this.selectedScale, this.selectedScale, this.selectedScale);
 
     let color = this.selectedColor;
     prefab.traverse(function(child) {
@@ -265,6 +271,7 @@ class HoldFactory {
     this.eventBus.emit("settings:updated", {
       selectedType: this.selectedType,
       selectedColor: this.selectedColor,
+      selectedScale: this.selectedScale,
       currentTool: this.currentTool
     });
   }
@@ -307,4 +314,4 @@ class HoldFactory {
   }
 }
 
-export default HoldFactory;
+export default HoldManager;

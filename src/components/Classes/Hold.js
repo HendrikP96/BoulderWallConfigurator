@@ -1,57 +1,40 @@
 import * as THREE from "three";
 
-/**
- * Hold - Visueller Griff auf einer Kletterwand.
- * Liegt immer auf einem BoltHole, kümmert sich nicht selbst um Positionierung.
- */
 class Hold {
 
-  constructor(typeId, meshPath, color, rotation) {
+  constructor(typeId, color, scale) {
     this.typeId = typeId;
-    this.meshPath = meshPath;
     this.color = color || "#ffffff";
-    this.rotation = rotation || { x: 0, y: 0, z: 0 };
+    this.scale = scale || 0.5;
     this.mesh = null;
   }
 
-  createMesh(holdFactory, position) {
-    let prefab = holdFactory.getPrefab(this.typeId);
+  createMesh(holdManager, position) {
+    let prefab = holdManager.getPrefab(this.typeId);
 
     if (prefab === null) {
-      console.warn("Prefab für Hold-Typ " + this.typeId + " nicht geladen.");
       return null;
     }
 
     this.mesh = prefab;
-    this.mesh.position.set(
-      position.x,
-      position.y,
-      position.z + holdFactory.holdZOffset
-    );
-    this.mesh.rotation.set(this.rotation.x, this.rotation.y, this.rotation.z);
-    this.mesh.scale.set(holdFactory.holdScale, holdFactory.holdScale, holdFactory.holdScale);
+    this.mesh.position.set(position.x, position.y, position.z + holdManager.holdZOffset);
+    this.mesh.scale.set(this.scale, this.scale, this.scale);
 
     let self = this;
     this.mesh.traverse(function(child) {
       if (child.isMesh) {
-        // Original-Material klonen und Farbe als Tint anwenden
         let originalMaterial = child.material;
-        let newMaterial = originalMaterial.clone();
-        
-        // Farbe mit Textur multiplizieren
-        newMaterial.color.set(self.color);
-        newMaterial.side = THREE.DoubleSide;
-        
+        let newMaterial = new THREE.MeshStandardMaterial({
+          color: self.color,
+          normalMap: originalMaterial.normalMap || null,
+          side: THREE.DoubleSide
+        });
         child.material = newMaterial;
         child.castShadow = true;
         child.receiveShadow = true;
       }
     });
 
-    return this.mesh;
-  }
-
-  getMesh() {
     return this.mesh;
   }
 
@@ -67,42 +50,30 @@ class Hold {
     }
   }
 
-  getMeshPath() {
-    return this.meshPath;
+  // --- Getter / Setter ---
+
+  getMesh() {
+    return this.mesh;
+  }
+
+  getTypeId() {
+    return this.typeId;
   }
 
   getColor() {
     return this.color;
   }
 
-  getRotation() {
-    return this.rotation;
+  setColor(color) {
+    this.color = color;
   }
 
   getScale() {
     return this.scale;
   }
 
-  getZOffset() {
-    return this.zOffset;
-  }
-
-  getRenderConfig() {
-    return {
-      meshPath: this.meshPath,
-      color: this.color,
-      rotation: [this.rotation.x, this.rotation.y, this.rotation.z],
-      scale: this.scale,
-      zOffset: this.zOffset
-    };
-  }
-
-  setColor(color) {
-    this.color = color;
-  }
-
-  setRotation(rotation) {
-    this.rotation = rotation;
+  setScale(scale) {
+    this.scale = scale;
   }
 }
 

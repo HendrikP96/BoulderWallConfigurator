@@ -7,12 +7,12 @@
 const WALL_TYPES = [
   {
     id: 'classic',
-    name: 'Classic',
+    name: 'Klassisch',
     preview: '/textures/Wall/Wall1_Color.png'
   },
   {
     id: 'plywood',
-    name: 'Plywood',
+    name: 'Sperrholz',
     preview: '/textures/Wall/plywood_color.png'
   }
 ]

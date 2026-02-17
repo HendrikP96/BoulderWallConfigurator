@@ -5,3 +5,5 @@ export { default as BoltHoleOccupiedConstraint } from './BoltHoleOccupiedConstra
 export { default as WallAngleConstraint } from './WallAngleConstraint.js';
 export { default as HoldDistanceConstraint } from './HoldDistanceConstraint.js';
 export { default as RouteSeparationConstraint } from './RouteSeparationConstraint.js';
+export { default as MinMaxHoldsConstraint } from './MinMaxHoldsConstraint.js';
+export { default as StartTopHoldConstraint } from './StartTopHoldConstraint.js';

@@ -2,15 +2,11 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import WallBuilder from "../components/Classes/WallBuilder.js";
-import HoldFactory from "../components/Classes/HoldFactory.js";
+import HoldManager from "../components/Classes/HoldManager.js";
 import RouteManager from "../components/Classes/RouteManager.js";
-import InteractionManager from "../components/Classes/InteractionManager.js";
 import InputManager from "./InputManager.js";
+import DemoHall from "./DemoHall.js";
 
-/**
- * SceneController - Zentrale Klasse für die Verwaltung aller 3D-Engine-Komponenten:
- * Verwaltet Scene, Camera, Renderer und verbindet alle Komponenten.
- */
 class SceneController {
 
   constructor() {
@@ -19,29 +15,19 @@ class SceneController {
     this.isInitialized = false;
     this.updateCallbacks = [];
 
-    // Three.js Core
     this.scene = null;
     this.camera = null;
     this.renderer = null;
     this.controls = null;
     this.textureLoader = new THREE.TextureLoader();
 
-    // Manager für Interaktionen und Logik
-    this.holdFactory = new HoldFactory();
+    this.holdManager = new HoldManager();
     this.wallBuilder = new WallBuilder();
-
-    this.wall = this.wallBuilder.createSimpleWall(2, 3);    // zu bearbeitende Wand erstellen
-
+    this.wall = this.wallBuilder.createSimpleWall(2, 3);
     this.routeManager = new RouteManager(this.wall);
-    this.interactionManager = new InteractionManager(
-      this.wall,
-      this.holdFactory,
-      this.routeManager,
-      this.wallBuilder
-    );
     this.inputManager = null;
+    this.demoHall = new DemoHall();
 
-    // Confirmation
     this.confirmMesh = null;
     this.confirmParent = null;
     this.confirmTimeout = null;
@@ -70,14 +56,10 @@ class SceneController {
     this.createControls();
     this.createHelpers();
 
-    this.inputManager = new InputManager(
-      this.container,
-      this.camera
-    );
+    this.inputManager = new InputManager(this.container, this.camera);
 
-    // Prefabs vorladen, dann Scene bauen
     let self = this;
-    this.holdFactory.preloadAll(function() {
+    this.holdManager.preloadAll(function() {
       self.buildScene();
       self.collectColliders();
       window.addEventListener("resize", self.boundOnResize);
@@ -86,31 +68,11 @@ class SceneController {
     });
   }
 
-  collectColliders() {
-    let boltHoles = this.wall.getAllBoltHoles();
-    let colliderMeshes = [];
-
-    for (let i = 0; i < boltHoles.length; i++) {
-      let boltHole = boltHoles[i];
-      let collider = boltHole.getCollider();
-
-      if (collider !== null) {
-        let mesh = collider.getMesh();
-        if (mesh !== null) {
-          colliderMeshes.push(mesh);
-          // Nicht zur Scene hinzufügen - Collider sind schon Children der BoltHoles
-        }
-      }
-    }
-
-    this.inputManager.setColliders(colliderMeshes);
-    console.log("Colliders gesammelt:", colliderMeshes.length);
-  }
-
   createScene() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x2a2a3e);
-    this.scene.fog = new THREE.Fog(0x2a2a3e, 15, 30);
+    // Warmes Hellgrau - kontrastiert mit der Kletterwand
+    this.scene.background = new THREE.Color(0xc5c5c0);
+    this.scene.fog = new THREE.Fog(0xc5c5c0, 25, 60);
   }
 
   createCamera() {
@@ -136,19 +98,32 @@ class SceneController {
   }
 
   createLights() {
-    let ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    // Helles Ambient für gleichmäßige Grundbeleuchtung
+    let ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     this.scene.add(ambientLight);
 
-    let hemisphereLight = new THREE.HemisphereLight(0x87ceeb, 0x362d26, 0.5);
+    // Hemisphere für natürlichen Himmel/Boden-Gradient
+    let hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xe0e0e0, 0.6);
     this.scene.add(hemisphereLight);
 
-    let directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    directionalLight.position.set(5, 10, 7);
-    directionalLight.castShadow = false;
+    // Hauptlicht mit Schatten
+    let directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    directionalLight.position.set(4, 10, 6);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 1024;
+    directionalLight.shadow.mapSize.height = 1024;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 25;
+    directionalLight.shadow.camera.left = -5;
+    directionalLight.shadow.camera.right = 5;
+    directionalLight.shadow.camera.top = 6;
+    directionalLight.shadow.camera.bottom = -1;
+    directionalLight.shadow.bias = -0.0005;
     this.scene.add(directionalLight);
 
-    let fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
-    fillLight.position.set(-5, 5, -5);
+    // Fülllicht von der anderen Seite
+    let fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    fillLight.position.set(-4, 6, 4);
     this.scene.add(fillLight);
   }
 
@@ -158,75 +133,17 @@ class SceneController {
     this.controls.enableZoom = true;
     this.controls.enableRotate = true;
     this.controls.minDistance = 1;
-    this.controls.maxDistance = 20;
+    this.controls.maxDistance = 25;
     this.controls.target.set(0, 1.5, 0);
     this.controls.update();
   }
 
   createHelpers() {
-    // Boden-Grid (1m Kästchen)
-    let gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x333333);
-    gridHelper.position.y = 0;
-    this.scene.add(gridHelper);
-
-    // Vertikale Höhenskala neben der Wand
-    this.createHeightScale();
-
-    let groundGeometry = new THREE.PlaneGeometry(50, 50);
-    let groundMaterial = new THREE.ShadowMaterial({ opacity: 0.3 });
-    let ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.01;
-    ground.receiveShadow = true;
-    this.scene.add(ground);
-  }
-
-  createHeightScale() {
-    let scaleGroup = new THREE.Group();
-    scaleGroup.position.set(-1.5, 0, 0);  // Links neben der Wand
-
-    // Vertikale Linie
-    let lineMaterial = new THREE.LineBasicMaterial({ color: 0x888888 });
-    let linePoints = [
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 3, 0)
-    ];
-    let lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
-    let line = new THREE.Line(lineGeometry, lineMaterial);
-    scaleGroup.add(line);
-
-    // Horizontale Markierungen bei jedem Meter
-    for (let i = 0; i <= 3; i++) {
-      let tickPoints = [
-        new THREE.Vector3(-0.1, i, 0),
-        new THREE.Vector3(0.1, i, 0)
-      ];
-      let tickGeometry = new THREE.BufferGeometry().setFromPoints(tickPoints);
-      let tick = new THREE.Line(tickGeometry, lineMaterial);
-      scaleGroup.add(tick);
-
-      // Text-Label (Sprite)
-      let canvas = document.createElement('canvas');
-      canvas.width = 64;
-      canvas.height = 32;
-      let ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#888888';
-      ctx.font = '24px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(i + 'm', 32, 24);
-
-      let texture = new THREE.CanvasTexture(canvas);
-      let spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-      let sprite = new THREE.Sprite(spriteMaterial);
-      sprite.position.set(-0.25, i, 0);
-      sprite.scale.set(0.3, 0.15, 1);
-      scaleGroup.add(sprite);
-    }
-
-    this.scene.add(scaleGroup);
+    this.demoHall.build(this.scene);
   }
 
   buildScene() {
+    this.wall.setTextureLoader(this.textureLoader);
     this.wall.createAllMeshes(this.textureLoader);
     this.scene.add(this.wall.getGroup());
     this.rebuildHoldMeshes();
@@ -248,13 +165,63 @@ class SceneController {
         continue;
       }
 
-      // Hold-Position relativ zum BoltHole (0,0,0)
       let pos = { x: 0, y: 0, z: 0 };
-      let mesh = hold.createMesh(this.holdFactory, pos);
+      let mesh = hold.createMesh(this.holdManager, pos);
       if (mesh !== null) {
         boltHole.getMesh().add(mesh);
       }
     }
+  }
+
+  collectColliders() {
+    let boltHoles = this.wall.getAllBoltHoles();
+    let colliderMeshes = [];
+
+    for (let i = 0; i < boltHoles.length; i++) {
+      let boltHole = boltHoles[i];
+      let collider = boltHole.getCollider();
+
+      if (collider !== null) {
+        let mesh = collider.getMesh();
+        if (mesh !== null) {
+          colliderMeshes.push(mesh);
+        }
+      }
+    }
+
+    this.inputManager.setColliders(colliderMeshes);
+  }
+
+  start() {
+    if (this.isRunning === false) {
+      this.isRunning = true;
+      this.animate();
+    }
+  }
+
+  stop() {
+    this.isRunning = false;
+  }
+
+  animate() {
+    if (this.isRunning === false) {
+      return;
+    }
+
+    requestAnimationFrame(this.boundAnimate);
+
+    this.inputManager.update();
+    this.controls.update();
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  onResize() {
+    let width = this.container.clientWidth;
+    let height = this.container.clientHeight;
+
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(width, height);
   }
 
   showConfirmation(boltHole) {
@@ -293,56 +260,6 @@ class SceneController {
     }, 500);
   }
 
-  start() {
-    if (this.isRunning === false) {
-      this.isRunning = true;
-      this.animate();
-    }
-  }
-
-  stop() {
-    this.isRunning = false;
-  }
-
-  animate() {
-    if (this.isRunning === false) {
-      return;
-    }
-
-    requestAnimationFrame(this.boundAnimate);
-
-    this.inputManager.update();
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  onResize() {
-    let width = this.container.clientWidth;
-    let height = this.container.clientHeight;
-
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height);
-  }
-
-  update() {
-    for (let i = 0; i < this.updateCallbacks.length; i++) {
-      this.updateCallbacks[i]();
-    }
-  }
-
-  onUpdate(callback) {
-    this.updateCallbacks.push(callback);
-
-    let self = this;
-    return function() {
-      let index = self.updateCallbacks.indexOf(callback);
-      if (index !== -1) {
-        self.updateCallbacks.splice(index, 1);
-      }
-    };
-  }
-
   dispose() {
     this.stop();
 
@@ -354,10 +271,8 @@ class SceneController {
       this.inputManager.dispose();
     }
 
-    this.holdFactory.hidePreview();
-
+    this.holdManager.hidePreview();
     window.removeEventListener("resize", this.boundOnResize);
-
     this.wall.disposeAllMeshes();
 
     if (this.confirmMesh !== null && this.confirmParent !== null) {
@@ -371,6 +286,26 @@ class SceneController {
 
     this.updateCallbacks = [];
     this.isInitialized = false;
+  }
+
+  // --- Callbacks ---
+
+  onUpdate(callback) {
+    this.updateCallbacks.push(callback);
+
+    let self = this;
+    return function() {
+      let index = self.updateCallbacks.indexOf(callback);
+      if (index !== -1) {
+        self.updateCallbacks.splice(index, 1);
+      }
+    };
+  }
+
+  update() {
+    for (let i = 0; i < this.updateCallbacks.length; i++) {
+      this.updateCallbacks[i]();
+    }
   }
 }
 

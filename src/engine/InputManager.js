@@ -1,9 +1,6 @@
 import * as THREE from "three";
+import EventBus from "./EventBus.js";
 
-/**
- * InputManager - Raycasting und Mouse-Events.
- * Raycasted auf Collider-Meshes und ruft onClick/onHover/onHoverExit auf den Owners.
- */
 class InputManager {
 
   constructor(container, camera) {
@@ -20,21 +17,6 @@ class InputManager {
     this.boundOnClick = this.onClick.bind(this);
 
     this.addEventListeners();
-  }
-
-  setColliders(colliders) {
-    this.colliders = colliders;
-  }
-
-  addCollider(collider) {
-    let mesh = collider.getMesh();
-    if (mesh !== null) {
-      this.colliders.push(mesh);
-    }
-  }
-
-  clearColliders() {
-    this.colliders = [];
   }
 
   addEventListeners() {
@@ -60,6 +42,7 @@ class InputManager {
 
     if (typeof this.hoveredTarget.onClick === "function") {
       this.hoveredTarget.onClick();
+      EventBus.getInstance().emit("interaction:click", this.hoveredTarget);
     }
   }
 
@@ -78,28 +61,45 @@ class InputManager {
     }
 
     if (newTarget !== this.hoveredTarget) {
-      // Altes Ziel - HoverExit
       if (this.hoveredTarget !== null && typeof this.hoveredTarget.onHoverExit === "function") {
         this.hoveredTarget.onHoverExit();
+        EventBus.getInstance().emit("interaction:hoverEnd", this.hoveredTarget);
       }
 
-      // Neues Ziel - Hover
       if (newTarget !== null && typeof newTarget.onHover === "function") {
         newTarget.onHover();
+        EventBus.getInstance().emit("interaction:hover", newTarget);
       }
 
       this.hoveredTarget = newTarget;
     }
   }
 
-  getHoveredTarget() {
-    return this.hoveredTarget;
-  }
-
   dispose() {
     this.removeEventListeners();
     this.hoveredTarget = null;
     this.colliders = [];
+  }
+
+  // --- Getter / Setter ---
+
+  setColliders(colliders) {
+    this.colliders = colliders;
+  }
+
+  addCollider(collider) {
+    let mesh = collider.getMesh();
+    if (mesh !== null) {
+      this.colliders.push(mesh);
+    }
+  }
+
+  clearColliders() {
+    this.colliders = [];
+  }
+
+  getHoveredTarget() {
+    return this.hoveredTarget;
   }
 }
 

@@ -1,12 +1,6 @@
 import * as THREE from "three";
 import BoltHole from './BoltHole.js';
 
-/**
- * WallElement - Einzelnes Wandmodul mit BoltHole-Grid.
- * 
- * WARUM GROUP: Wenn WallElement rotiert wird (Überhang),
- * rotieren alle BoltHoles und Holds automatisch mit.
- */
 class WallElement {
 
   constructor(width, height, position, holeSpacing) {
@@ -21,12 +15,9 @@ class WallElement {
   }
 
   createMesh(textureLoader, texturePaths) {
-    // Group als Container - wenn WallElement rotiert wird (Überhang),
-    // rotieren WallMesh und alle BoltHoles automatisch mit
     this.group = new THREE.Group();
     this.group.position.set(this.position.x, this.position.y, this.position.z);
 
-    // Wall-Mesh erstellen (Position 0,0,0 relativ zur Group)
     let geometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
 
     let colorTexture = textureLoader.load(texturePaths.color);
@@ -49,7 +40,6 @@ class WallElement {
     this.mesh.receiveShadow = true;
     this.group.add(this.mesh);
 
-    // BoltHoles zur Group hinzufügen (Mesh wird im Constructor erstellt)
     let boltHoles = this.getAllBoltHoles();
     for (let i = 0; i < boltHoles.length; i++) {
       let boltHole = boltHoles[i];
@@ -62,33 +52,6 @@ class WallElement {
     return this.group;
   }
 
-  getGroup() {
-    return this.group;
-  }
-
-  getMesh() {
-    return this.mesh;
-  }
-
-  getDepth() {
-    return this.depth;
-  }
-
-  disposeMesh() {
-    if (this.mesh !== null) {
-      this.mesh.geometry.dispose();
-      this.mesh.material.dispose();
-      this.mesh = null;
-    }
-    if (this.group !== null) {
-      this.group = null;
-    }
-  }
-
-  /**
-   * Generiert das BoltHole-Grid mit relativen Positionen.
-   * Y geht von -height/2 bis +height/2.
-   */
   generateBoltHoleGrid() {
     let holes = [];
     let cols = Math.floor(this.width / this.holeSpacing);
@@ -99,7 +62,6 @@ class WallElement {
     let marginX = (this.width - gridWidth) / 2;
     let marginY = (this.height - gridHeight) / 2;
 
-    // Z ist auf der Oberfläche (depth/2 relativ zur Group-Mitte)
     let surfaceZ = this.depth / 2;
 
     for (let row = 0; row < rows; row++) {
@@ -116,12 +78,58 @@ class WallElement {
     return holes;
   }
 
+  findClosestBoltHole(x, y) {
+    let closestHole = null;
+    let minDistance = Infinity;
+    let allHoles = this.getAllBoltHoles();
+
+    for (let i = 0; i < allHoles.length; i++) {
+      let hole = allHoles[i];
+      let position = hole.getPosition();
+      let deltaX = position.x - x;
+      let deltaY = position.y - y;
+      let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestHole = hole;
+      }
+    }
+
+    return { hole: closestHole, distance: minDistance };
+  }
+
+  disposeMesh() {
+    if (this.mesh !== null) {
+      this.mesh.geometry.dispose();
+      this.mesh.material.dispose();
+      this.mesh = null;
+    }
+    if (this.group !== null) {
+      this.group = null;
+    }
+  }
+
+  // --- Getter / Setter ---
+
+  getGroup() {
+    return this.group;
+  }
+
+  getMesh() {
+    return this.mesh;
+  }
+
   getWidth() {
     return this.width;
   }
 
   getHeight() {
     return this.height;
+  }
+
+  getDepth() {
+    return this.depth;
   }
 
   getPosition() {
@@ -157,31 +165,6 @@ class WallElement {
       return 0;
     }
     return this.boltHoles[0].length;
-  }
-
-  /**
-   * Findet das nächstgelegene BoltHole zu einer Position.
-   * Nutzt euklidischen Abstand in X/Y-Ebene.
-   */
-  findClosestBoltHole(x, y) {
-    let closestHole = null;
-    let minDistance = Infinity;
-    let allHoles = this.getAllBoltHoles();
-
-    for (let i = 0; i < allHoles.length; i++) {
-      let hole = allHoles[i];
-      let position = hole.getPosition();
-      let deltaX = position.x - x;
-      let deltaY = position.y - y;
-      let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestHole = hole;
-      }
-    }
-
-    return { hole: closestHole, distance: minDistance };
   }
 }
 

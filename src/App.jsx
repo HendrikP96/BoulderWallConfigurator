@@ -1,18 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
-import { ConfiguratorPanel, DebugConsole } from './components/ui';
+import { ConfiguratorPanel, RoutePlannerPanel } from './components/ui';
 import SceneController from './engine/SceneController.js';
+import EventBus from './engine/EventBus.js';
 import './App.css';
 
-/**
- * Boulder Wall Configurator - React UI
- * Die 3D-Logik liegt komplett in SceneController.js
- */
 function App() {
   let containerRef = useRef(null);
   let [app] = useState(function() { return new SceneController(); });
-  let [updateCounter, setUpdateCounter] = useState(0);
+  let [routes, setRoutes] = useState([]);
+  let [notification, setNotification] = useState(null);
+  let [settings, setSettings] = useState({
+    selectedType: 1,
+    selectedColor: "#FF6B6B",
+    selectedScale: 0.5,
+    wallTexture: "classic",
+    currentTool: "place"
+  });
 
-  // Application initialisieren wenn Container gemountet
   useEffect(function() {
     if (containerRef.current === null) {
       return;
@@ -20,79 +24,114 @@ function App() {
 
     app.init(containerRef.current);
 
-    let unsubscribe = app.onUpdate(function() {
-      setUpdateCounter(function(n) { return n + 1; });
-    });
+    let eventBus = EventBus.getInstance();
+
+    let onRoutesUpdated = function(newRoutes) {
+      setRoutes(newRoutes.slice());
+    };
+
+    let onSettingsUpdated = function(newSettings) {
+      setSettings(newSettings);
+    };
+
+    let onRouteCreated = function(data) {
+      setNotification("Route '" + data.name + "' erstellt");
+      setTimeout(function() { setNotification(null); }, 2000);
+    };
+
+    let onRouteDeleted = function(data) {
+      setNotification("Route '" + data.name + "' gelöscht");
+      setTimeout(function() { setNotification(null); }, 2000);
+    };
+
+    eventBus.on("routes:updated", onRoutesUpdated);
+    eventBus.on("settings:updated", onSettingsUpdated);
+    eventBus.on("route:created", onRouteCreated);
+    eventBus.on("route:deleted", onRouteDeleted);
 
     return function() {
-      unsubscribe();
+      eventBus.off("routes:updated", onRoutesUpdated);
+      eventBus.off("settings:updated", onSettingsUpdated);
+      eventBus.off("route:created", onRouteCreated);
+      eventBus.off("route:deleted", onRouteDeleted);
       app.dispose();
     };
   }, [app]);
 
-  // Event Handler
-  function handleCreateRoute(name, color) {
-    let route = app.interactionManager.createNewRoute(name, color);
-    app.update();
-    return route;
-  }
-
-  function handleSelectRoute(routeId) {
-    if (routeId === null) {
-      app.interactionManager.deselectRoute();
-    } else {
-      app.interactionManager.selectRoute(routeId);
-    }
-    app.update();
-  }
-
   function handleSelectHoldType(typeId) {
-    app.interactionManager.selectHoldType(typeId);
-    app.update();
+    EventBus.getInstance().emit("ui:holdTypeChanged", { typeId: typeId });
   }
 
   function handleSelectColor(color) {
-    app.interactionManager.selectColor(color);
-    app.update();
+    EventBus.getInstance().emit("ui:colorChanged", { color: color });
   }
 
   function handleWallTypeChange(textureType) {
-    app.wall.setTexture(textureType, app.textureLoader);
-    app.update();
+    EventBus.getInstance().emit("ui:wallTextureChanged", { texture: textureType });
+  }
+
+  function handleRouteNameChange(routeId, newName) {
+    EventBus.getInstance().emit("ui:routeRenamed", { routeId: routeId, newName: newName });
+  }
+
+  function handleToolChange(tool) {
+    EventBus.getInstance().emit("ui:toolChanged", { tool: tool });
+  }
+
+  function handleScaleChange(scale) {
+    EventBus.getInstance().emit("ui:scaleChanged", { scale: scale });
+  }
+
+  function handleRouteClear(routeId) {
+    EventBus.getInstance().emit("ui:routeCleared", { routeId: routeId });
+  }
+
+  function handleRouteVisibilityToggle(routeId) {
+    EventBus.getInstance().emit("ui:routeVisibilityToggled", { routeId: routeId });
   }
 
   return (
     <div className="app">
       <div ref={containerRef} className="viewport" />
 
+      {notification && (
+        <div className="notification" style={{
+          position: 'absolute',
+          top: 20,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(0,0,0,0.8)',
+          color: 'white',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          fontSize: '14px',
+          zIndex: 1000
+        }}>
+          {notification}
+        </div>
+      )}
+
+      <RoutePlannerPanel
+        routes={routes}
+        selectedColor={settings.selectedColor}
+        onRouteNameChange={handleRouteNameChange}
+        onSelectColor={handleSelectColor}
+        onRouteClear={handleRouteClear}
+        onRouteVisibilityToggle={handleRouteVisibilityToggle}
+      />
+
       <ConfiguratorPanel
-        interactionManager={app.interactionManager}
+        selectedHoldType={settings.selectedType}
+        selectedColor={settings.selectedColor}
+        selectedScale={settings.selectedScale}
+        wallTexture={settings.wallTexture}
+        currentTool={settings.currentTool}
         onWallTypeChange={handleWallTypeChange}
         onHoldTypeChange={handleSelectHoldType}
         onColorChange={handleSelectColor}
-        onCreateRoute={handleCreateRoute}
-        onSelectRoute={handleSelectRoute}
-        triggerUpdate={function() { app.update(); }}
+        onScaleChange={handleScaleChange}
+        onToolChange={handleToolChange}
       />
-
-      <div className="debug-info" style={{
-        position: 'absolute',
-        bottom: 10,
-        right: 10,
-        background: 'rgba(0,0,0,0.7)',
-        color: 'white',
-        padding: '10px',
-        borderRadius: '5px',
-        fontSize: '12px'
-      }}>
-        <div>Holds erstellt: {app.holdFactory.getCreatedHoldsCount()}</div>
-        <div>Routen: {app.routeManager.getRoutes().length}</div>
-        <div>Aktive Route: {app.interactionManager.getActiveRoute()?.getName() || 'Keine'}</div>
-        <div>Hold-Typ: {app.interactionManager.getSelectedHoldType()}</div>
-        <div>Updates: {updateCounter}</div>
-      </div>
-
-      <DebugConsole />
     </div>
   );
 }
