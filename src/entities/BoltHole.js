@@ -14,7 +14,7 @@ class BoltHole {
     this.holeRadius = 0.004;    
     this.holeDepth = 0.005;
     this.hoverColor = "#4ECDC4";  
-    this.HoleColor = "#1a1a1a";
+    this.holeColor = "#1a1a1a";
     this.isHovered = false;
 
     this.collider = new SphereCollider(this, 0.07);
@@ -31,7 +31,7 @@ class BoltHole {
     geometry.rotateX(-Math.PI / 2);
 
     let material = new THREE.MeshStandardMaterial({
-      color: this.HoleColor
+      color: this.holeColor
     });
 
     let mesh = new THREE.Mesh(geometry, material);
@@ -93,7 +93,7 @@ class BoltHole {
       return;
     }
 
-    let color = this.isHovered ? this.hoverColor : this.HoleColor;
+    let color = this.isHovered ? this.hoverColor : this.holeColor;
     this.mesh.material.color.set(color);
   }
 

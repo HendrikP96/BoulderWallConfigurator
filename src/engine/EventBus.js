@@ -1,20 +1,13 @@
-let instance = null;
+import Singleton from '../utils/Singleton.js';
 
-class EventBus {
+class EventBus extends Singleton {
 
   constructor() {
-    if (instance !== null) {
-      return instance;
-    }
-    instance = this;
+    super();
+    if (this._isInitialized) return;
+    this._isInitialized = true;
+    
     this.listeners = {};
-  }
-
-  static getInstance() {
-    if (instance === null) {
-      new EventBus();
-    }
-    return instance;
   }
 
   on(event, callback) {

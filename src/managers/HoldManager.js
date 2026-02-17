@@ -2,16 +2,14 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import Hold from '../entities/Hold.js';
 import EventBus from '../engine/EventBus.js';
+import Singleton from '../utils/Singleton.js';
 
-let instance = null;
-
-class HoldManager {
+class HoldManager extends Singleton {
 
   constructor() {
-    if (instance !== null) {
-      return instance;
-    }
-    instance = this;
+    super();
+    if (this._isInitialized) return;
+    this._isInitialized = true;
 
     this.holdTypes = [1, 2, 3, 4, 5, 6];
     this.prefabs = {};
@@ -277,10 +275,6 @@ class HoldManager {
   }
 
   // --- Getter / Setter ---
-
-  static getInstance() {
-    return instance;
-  }
 
   getPrefab(typeId) {
     if (this.prefabs[typeId] === undefined) {

@@ -52,21 +52,32 @@ class WallElement {
     return this.group;
   }
 
+  /**
+   * Erzeugt ein gleichmäßiges Raster von Bohrlöchern auf der Wandoberfläche.
+   * Das Raster wird zentriert, sodass links/rechts und oben/unten gleiche Ränder entstehen.
+   */
   generateBoltHoleGrid() {
     let holes = [];
+
+    // Anzahl Spalten/Reihen basierend auf Wandgröße und Abstand
     let cols = Math.floor(this.width / this.holeSpacing);
     let rows = Math.floor(this.height / this.holeSpacing);
 
+    // Gesamtgröße des Rasters (zwischen äußersten Löchern)
     let gridWidth = (cols - 1) * this.holeSpacing;
     let gridHeight = (rows - 1) * this.holeSpacing;
+
+    // Rand links/unten, um das Raster zu zentrieren
     let marginX = (this.width - gridWidth) / 2;
     let marginY = (this.height - gridHeight) / 2;
 
+    // Bohrlöcher liegen auf der Vorderseite der Wand
     let surfaceZ = this.depth / 2;
 
     for (let row = 0; row < rows; row++) {
       let rowHoles = [];
       for (let col = 0; col < cols; col++) {
+        // Position relativ zum Wandzentrum berechnen
         let posX = -this.width / 2 + marginX + col * this.holeSpacing;
         let posY = -this.height / 2 + marginY + row * this.holeSpacing;
         let position = { x: posX, y: posY, z: surfaceZ };
@@ -76,27 +87,6 @@ class WallElement {
       holes.push(rowHoles);
     }
     return holes;
-  }
-
-  findClosestBoltHole(x, y) {
-    let closestHole = null;
-    let minDistance = Infinity;
-    let allHoles = this.getAllBoltHoles();
-
-    for (let i = 0; i < allHoles.length; i++) {
-      let hole = allHoles[i];
-      let position = hole.getPosition();
-      let deltaX = position.x - x;
-      let deltaY = position.y - y;
-      let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestHole = hole;
-      }
-    }
-
-    return { hole: closestHole, distance: minDistance };
   }
 
   disposeMesh() {
@@ -136,16 +126,6 @@ class WallElement {
     return this.position;
   }
 
-  getBoltHole(row, col) {
-    if (this.boltHoles[row] === undefined) {
-      return null;
-    }
-    if (this.boltHoles[row][col] === undefined) {
-      return null;
-    }
-    return this.boltHoles[row][col];
-  }
-
   getAllBoltHoles() {
     let allHoles = [];
     for (let row = 0; row < this.boltHoles.length; row++) {
@@ -154,17 +134,6 @@ class WallElement {
       }
     }
     return allHoles;
-  }
-
-  getRowCount() {
-    return this.boltHoles.length;
-  }
-
-  getColCount() {
-    if (this.boltHoles.length === 0) {
-      return 0;
-    }
-    return this.boltHoles[0].length;
   }
 }
 

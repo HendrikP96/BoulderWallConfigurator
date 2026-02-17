@@ -1,11 +1,20 @@
+import Singleton from '../utils/Singleton.js';
+import EventBus from '../engine/EventBus.js';
+
 /**
  * ConstraintManager - Verwaltet und validiert mehrere Constraints.
  * Unterscheidet zwischen Hard-Violations (blockierend) und Soft-Violations (Warnungen).
+ * Singleton - es gibt nur eine zentrale Instanz.
  */
-class ConstraintManager {
+class ConstraintManager extends Singleton {
 
   constructor() {
+    super();
+    if (this._isInitialized) return;
+    this._isInitialized = true;
+    
     this.constraints = [];
+    this.eventBus = EventBus.getInstance();
   }
 
   addConstraint(constraint) {
@@ -76,6 +85,47 @@ class ConstraintManager {
   canProceed(context) {
     let results = this.validateAll(context);
     return results.isValid;
+  }
+
+  /**
+   * Validiert und sendet Ergebnisse an das UI via EventBus.
+   * Für automatisches Feedback bei Aktionen.
+   */
+  validateAndNotify(context, source) {
+    let results = this.validateAll(context);
+    
+    // Sende Hard-Violations (Fehler)
+    if (results.hardViolations.length > 0) {
+      this.eventBus.emit("constraint:violation", {
+        type: "error",
+        source: source || "unknown",
+        violations: results.hardViolations
+      });
+    }
+    
+    // Sende Soft-Violations (Warnungen)
+    if (results.softViolations.length > 0) {
+      this.eventBus.emit("constraint:violation", {
+        type: "warning",
+        source: source || "unknown",
+        violations: results.softViolations
+      });
+    }
+    
+    // Sende OK wenn alles passt
+    if (results.isValid && results.softViolations.length === 0) {
+      this.eventBus.emit("constraint:cleared", { source: source });
+    }
+    
+    return results;
+  }
+
+  /**
+   * Validiert Route-Constraints und benachrichtigt UI.
+   */
+  validateRoute(route) {
+    let context = { route: route };
+    return this.validateAndNotify(context, "route");
   }
 
   getConstraintsByType(type) {

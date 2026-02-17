@@ -48,11 +48,6 @@ function RoutePlannerPanel({ routes, selectedColor, onRouteNameChange, onSelectC
     }
   }
 
-  function getConstraintStatus(route) {
-    let status = route.getConstraintStatus(4, 20);
-    return status;
-  }
-
   function getDifficultyLabel(level) {
     let labels = {
       easy: "Leicht",
@@ -61,6 +56,66 @@ function RoutePlannerPanel({ routes, selectedColor, onRouteNameChange, onSelectC
       expert: "Experte"
     };
     return labels[level] || level;
+  }
+
+  function renderConstraints(route) {
+    let results = route.getValidationResults();
+    
+    // Keine Validierung vorhanden (z.B. bei weniger als 2 Holds)
+    if (results === null) {
+      return (
+        <div className="constraint-item missing">
+          <span className="constraint-icon">○</span>
+          <span>Mindestens 2 Griffe für Analyse benötigt</span>
+        </div>
+      );
+    }
+
+    let items = [];
+
+    // Passed constraints (fulfilled)
+    for (let i = 0; i < results.passed.length; i++) {
+      let item = results.passed[i];
+      items.push(
+        <div key={"pass-" + i} className="constraint-item fulfilled">
+          <span className="constraint-icon">✓</span>
+          <span>{item.message}</span>
+        </div>
+      );
+    }
+
+    // Soft violations (warnings)
+    for (let i = 0; i < results.softViolations.length; i++) {
+      let item = results.softViolations[i];
+      items.push(
+        <div key={"soft-" + i} className="constraint-item warning">
+          <span className="constraint-icon">⚠</span>
+          <span>{item.message}</span>
+        </div>
+      );
+    }
+
+    // Hard violations (errors)
+    for (let i = 0; i < results.hardViolations.length; i++) {
+      let item = results.hardViolations[i];
+      items.push(
+        <div key={"hard-" + i} className="constraint-item error">
+          <span className="constraint-icon">⛔</span>
+          <span>{item.message}</span>
+        </div>
+      );
+    }
+
+    if (items.length === 0) {
+      return (
+        <div className="constraint-item fulfilled">
+          <span className="constraint-icon">✓</span>
+          <span>Alle Anforderungen erfüllt</span>
+        </div>
+      );
+    }
+
+    return items;
   }
 
   return (
@@ -81,7 +136,6 @@ function RoutePlannerPanel({ routes, selectedColor, onRouteNameChange, onSelectC
             let isSelected = route.getColor() === selectedColor;
             let isExpanded = expandedRouteId === route.getId();
             let isEditing = editingId === route.getId();
-            let status = getConstraintStatus(route);
             let isComplete = route.isComplete();
 
             return (
@@ -147,21 +201,7 @@ function RoutePlannerPanel({ routes, selectedColor, onRouteNameChange, onSelectC
 
                     <div className="route-detail-section">
                       <span className="detail-section-title">Anforderungen:</span>
-                      
-                      <div className={`constraint-item ${status.hasStartHold.fulfilled ? 'fulfilled' : 'missing'}`}>
-                        <span className="constraint-icon">{status.hasStartHold.fulfilled ? '✓' : '○'}</span>
-                        <span>{status.hasStartHold.message}</span>
-                      </div>
-
-                      <div className={`constraint-item ${status.hasTopHold.fulfilled ? 'fulfilled' : 'missing'}`}>
-                        <span className="constraint-icon">{status.hasTopHold.fulfilled ? '✓' : '○'}</span>
-                        <span>{status.hasTopHold.message}</span>
-                      </div>
-
-                      <div className={`constraint-item ${status.holdCount.fulfilled ? 'fulfilled' : 'missing'}`}>
-                        <span className="constraint-icon">{status.holdCount.fulfilled ? '✓' : '○'}</span>
-                        <span>{status.holdCount.message}</span>
-                      </div>
+                      {renderConstraints(route)}
                     </div>
 
                     <button

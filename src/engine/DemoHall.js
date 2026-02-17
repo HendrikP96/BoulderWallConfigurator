@@ -41,6 +41,11 @@ class DemoHall {
     this.createWalls();
   }
 
+  /**
+   * Erzeugt eine zweiteilige Fallschutzmatte vor der Wand.
+   * Besteht aus einem Plywood-Unterbau (25cm) und einer blauen Oberfläche (10cm).
+   * Texturen werden asynchron geladen.
+   */
   createFallMat() {
     let self = this;
 
@@ -182,10 +187,15 @@ class DemoHall {
     this.scene.add(ceiling);
   }
 
+  /**
+   * Erzeugt eine Höhenskala (0-3m) links neben der Kletterwand.
+   * Nutzt Canvas-Texturen für die Meter-Labels.
+   */
   createHeightScale() {
     let scaleGroup = new THREE.Group();
     scaleGroup.position.set(-1.5, 0, 0);
 
+    // Vertikale Linie von 0-3m
     let lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
     let linePoints = [
       new THREE.Vector3(0, 0, 0),
@@ -204,7 +214,9 @@ class DemoHall {
     let zeroTick = new THREE.Line(zeroTickGeometry, lineMaterial);
     scaleGroup.add(zeroTick);
 
+    // Striche und Labels für 1m, 2m, 3m
     for (let i = 1; i <= 3; i++) {
+      // Horizontaler Strich
       let tickPoints = [
         new THREE.Vector3(-0.1, i, 0),
         new THREE.Vector3(0.1, i, 0)
@@ -213,6 +225,7 @@ class DemoHall {
       let tick = new THREE.Line(tickGeometry, lineMaterial);
       scaleGroup.add(tick);
 
+      // Canvas-Textur mit Meter-Beschriftung
       let canvas = document.createElement('canvas');
       canvas.width = 64;
       canvas.height = 32;
@@ -222,6 +235,7 @@ class DemoHall {
       ctx.textAlign = 'center';
       ctx.fillText(i + 'm', 32, 24);
 
+      // Sprite bleibt immer zur Kamera ausgerichtet
       let texture = new THREE.CanvasTexture(canvas);
       let spriteMaterial = new THREE.SpriteMaterial({ map: texture });
       let sprite = new THREE.Sprite(spriteMaterial);

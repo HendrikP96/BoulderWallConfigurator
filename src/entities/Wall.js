@@ -107,16 +107,6 @@ class Wall {
     this.wallElements.push(wallElement);
   }
 
-  removeWallElement(index) {
-    if (index < 0 || index >= this.wallElements.length) {
-      return undefined;
-    }
-    
-    let removedElement = this.wallElements[index];
-    this.wallElements.splice(index, 1);
-    return removedElement;
-  }
-
   // --- Getter / Setter ---
 
   getGroup() {

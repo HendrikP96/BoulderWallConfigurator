@@ -1,11 +1,16 @@
 import * as THREE from "three";
 import EventBus from "./EventBus.js";
+import Singleton from "../utils/Singleton.js";
 
-class InputManager {
+class InputManager extends Singleton {
 
-  constructor(container, camera) {
-    this.container = container;
-    this.camera = camera;
+  constructor() {
+    super();
+    if (this._isInitialized) return;
+    this._isInitialized = true;
+
+    this.container = null;
+    this.camera = null;
 
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
@@ -15,16 +20,22 @@ class InputManager {
 
     this.boundOnMouseMove = this.onMouseMove.bind(this);
     this.boundOnClick = this.onClick.bind(this);
+  }
 
+  init(container, camera) {
+    this.container = container;
+    this.camera = camera;
     this.addEventListeners();
   }
 
   addEventListeners() {
+    if (this.container === null) return;
     this.container.addEventListener("mousemove", this.boundOnMouseMove);
     this.container.addEventListener("click", this.boundOnClick);
   }
 
   removeEventListeners() {
+    if (this.container === null) return;
     this.container.removeEventListener("mousemove", this.boundOnMouseMove);
     this.container.removeEventListener("click", this.boundOnClick);
   }

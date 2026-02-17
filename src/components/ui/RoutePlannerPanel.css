@@ -271,6 +271,16 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
+.constraint-item.warning {
+  color: #f5a623;
+  background: rgba(245, 166, 35, 0.1);
+}
+
+.constraint-item.error {
+  color: #ff4757;
+  background: rgba(255, 71, 87, 0.1);
+}
+
 .constraint-icon {
   width: 16px;
   text-align: center;

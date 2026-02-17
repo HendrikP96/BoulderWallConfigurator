@@ -1,17 +1,14 @@
 import Wall from '../entities/Wall.js';
 import WallElement from '../entities/WallElement.js';
 import ConstraintManager from '../constraints/ConstraintManager.js';
-import WallAngleConstraint from '../constraints/WallAngleConstraint.js';
 
 /**
- * WallBuilder - Baut Wände aus mehreren WallElements.
- * Prüft über Constraints welche Winkel für Überhänge erlaubt sind.
+ * WallBuilder - Klasse zum Erstellen von Wänden und Hinzufügen von Überhängen (zukünftig).
  */
 class WallBuilder {
 
   constructor() {
-    this.constraintManager = new ConstraintManager();
-    this.constraintManager.addConstraint(new WallAngleConstraint());
+    this.constraintManager = ConstraintManager.getInstance();
   }
 
   createSimpleWall(width, height, depth) {
@@ -71,21 +68,8 @@ class WallBuilder {
   }
 
   getAllowedAngles() {
-    let constraints = this.constraintManager.getConstraints();
-    let angleConstraint = null;
-    
-    for (let i = 0; i < constraints.length; i++) {
-      if (constraints[i].getName() === "WallAngle") {
-        angleConstraint = constraints[i];
-        break;
-      }
-    }
-    
-    if (angleConstraint === null) {
-      return [0];
-    }
-    
-    return angleConstraint.getAllowedAngles();
+    // Default angles - kann durch Constraint-System erweitert werden
+    return [0, 15, 30, 45];
   }
 
   getConstraintManager() {

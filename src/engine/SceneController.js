@@ -13,7 +13,6 @@ class SceneController {
     this.container = null;
     this.isRunning = false;
     this.isInitialized = false;
-    this.updateCallbacks = [];
 
     this.scene = null;
     this.camera = null;
@@ -27,10 +26,6 @@ class SceneController {
     this.routeManager = new RouteManager(this.wall);
     this.inputManager = null;
     this.demoHall = new DemoHall();
-
-    this.confirmMesh = null;
-    this.confirmParent = null;
-    this.confirmTimeout = null;
 
     this.boundAnimate = this.animate.bind(this);
     this.boundOnResize = this.onResize.bind(this);
@@ -56,7 +51,8 @@ class SceneController {
     this.createControls();
     this.createHelpers();
 
-    this.inputManager = new InputManager(this.container, this.camera);
+    this.inputManager = InputManager.getInstance();
+    this.inputManager.init(this.container, this.camera);
 
     let self = this;
     this.holdManager.preloadAll(function() {
@@ -70,9 +66,9 @@ class SceneController {
 
   createScene() {
     this.scene = new THREE.Scene();
-    // Warmes Hellgrau - kontrastiert mit der Kletterwand
-    this.scene.background = new THREE.Color(0xc5c5c0);
-    this.scene.fog = new THREE.Fog(0xc5c5c0, 25, 60);
+    // Heller Hintergrund für sauberes Weiß
+    this.scene.background = new THREE.Color(0xf0f0f0);
+    this.scene.fog = new THREE.Fog(0xf0f0f0, 30, 80);
   }
 
   createCamera() {
@@ -91,7 +87,7 @@ class SceneController {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.2;
+    this.renderer.toneMappingExposure = 1.4;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     this.container.appendChild(this.renderer.domElement);
@@ -103,7 +99,7 @@ class SceneController {
     this.scene.add(ambientLight);
 
     // Hemisphere für natürlichen Himmel/Boden-Gradient
-    let hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xe0e0e0, 0.6);
+    let hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xf5f5f5, 0.7);
     this.scene.add(hemisphereLight);
 
     // Hauptlicht mit Schatten
@@ -224,48 +220,8 @@ class SceneController {
     this.renderer.setSize(width, height);
   }
 
-  showConfirmation(boltHole) {
-    if (this.confirmMesh !== null && this.confirmParent !== null) {
-      this.confirmParent.remove(this.confirmMesh);
-      this.confirmMesh.geometry.dispose();
-      this.confirmMesh.material.dispose();
-      this.confirmMesh = null;
-      this.confirmParent = null;
-    }
-
-    if (this.confirmTimeout !== null) {
-      clearTimeout(this.confirmTimeout);
-    }
-
-    let geometry = new THREE.RingGeometry(0.025, 0.035, 16);
-    let material = new THREE.MeshBasicMaterial({
-      color: 0x22c55e,
-      side: THREE.DoubleSide
-    });
-
-    this.confirmMesh = new THREE.Mesh(geometry, material);
-    this.confirmMesh.position.set(0, 0, 0.03);
-    this.confirmParent = boltHole.getMesh();
-    this.confirmParent.add(this.confirmMesh);
-
-    let self = this;
-    this.confirmTimeout = setTimeout(function() {
-      if (self.confirmMesh !== null && self.confirmParent !== null) {
-        self.confirmParent.remove(self.confirmMesh);
-        self.confirmMesh.geometry.dispose();
-        self.confirmMesh.material.dispose();
-        self.confirmMesh = null;
-        self.confirmParent = null;
-      }
-    }, 500);
-  }
-
   dispose() {
     this.stop();
-
-    if (this.confirmTimeout !== null) {
-      clearTimeout(this.confirmTimeout);
-    }
 
     if (this.inputManager !== null) {
       this.inputManager.dispose();
@@ -275,37 +231,10 @@ class SceneController {
     window.removeEventListener("resize", this.boundOnResize);
     this.wall.disposeAllMeshes();
 
-    if (this.confirmMesh !== null && this.confirmParent !== null) {
-      this.confirmParent.remove(this.confirmMesh);
-      this.confirmMesh.geometry.dispose();
-      this.confirmMesh.material.dispose();
-    }
-
     this.renderer.dispose();
     this.container.removeChild(this.renderer.domElement);
 
-    this.updateCallbacks = [];
     this.isInitialized = false;
-  }
-
-  // --- Callbacks ---
-
-  onUpdate(callback) {
-    this.updateCallbacks.push(callback);
-
-    let self = this;
-    return function() {
-      let index = self.updateCallbacks.indexOf(callback);
-      if (index !== -1) {
-        self.updateCallbacks.splice(index, 1);
-      }
-    };
-  }
-
-  update() {
-    for (let i = 0; i < this.updateCallbacks.length; i++) {
-      this.updateCallbacks[i]();
-    }
   }
 }
 

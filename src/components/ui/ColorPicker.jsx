@@ -4,14 +4,7 @@
  * Einfache Farbauswahl mit vordefinierten Route-Farben
  */
 
-const ROUTE_COLORS = [
-  { id: 'red', hex: '#FF6B6B', name: 'Rot' },
-  { id: 'yellow', hex: '#FFE66D', name: 'Gelb' },
-  { id: 'blue', hex: '#0984E3', name: 'Blau' },
-  { id: 'orange', hex: '#FF9F43', name: 'Orange' },
-  { id: 'purple', hex: '#6C5CE7', name: 'Violett' },
-  { id: 'green', hex: '#2ECC71', name: 'Grün' },
-]
+import { ROUTE_COLORS } from '../../constants/colors.js'
 
 function ColorPicker({ selectedColor, onSelect }) {
   return (
