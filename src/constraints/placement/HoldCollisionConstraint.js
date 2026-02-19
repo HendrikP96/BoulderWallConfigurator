@@ -42,17 +42,18 @@ class HoldCollisionConstraint extends Constraint {
   }
 
   meshesIntersect(holdA, holdB) {
+    holdA.getMesh().updateMatrixWorld(true);
+    holdB.getMesh().updateMatrixWorld(true);
+
     let meshesA = this.collectMeshes(holdA.getMesh());
     let meshesB = this.collectMeshes(holdB.getMesh());
 
     for (let a = 0; a < meshesA.length; a++) {
       let meshA = meshesA[a];
-      meshA.updateMatrixWorld(true);
       this.ensureBVH(meshA);
 
       for (let b = 0; b < meshesB.length; b++) {
         let meshB = meshesB[b];
-        meshB.updateMatrixWorld(true);
         this.ensureBVH(meshB);
 
         let matrixBtoA = new THREE.Matrix4()
