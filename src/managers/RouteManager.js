@@ -1,8 +1,6 @@
 import { BoulderRoute } from '../entities/BoulderRoute.js';
 import EventBus from '../engine/EventBus.js';
 import ConstraintManager from '../constraints/ConstraintManager.js';
-import ReachabilityConstraint from '../constraints/route/ReachabilityConstraint.js';
-import StartPositionConstraint from '../constraints/route/StartPositionConstraint.js';
 
 class RouteManager {
 
@@ -12,9 +10,7 @@ class RouteManager {
     this.routes = [];
     this.eventBus = EventBus.getInstance();
     
-    // Route Constraints initialisieren
     this.constraintManager = ConstraintManager.getInstance();
-    this.initRouteConstraints();
 
     this.eventBus.on("hold:placed", function(data) {
       self.addHoldToRoute(data.boltHole);
@@ -39,65 +35,13 @@ class RouteManager {
     this.eventBus.on("ui:routeVisibilityToggled", function(data) {
       self.toggleRouteVisibility(data.routeId);
     });
-
-    this.eventBus.on("ui:validateRoute", function(data) {
-      self.validateRouteById(data.routeId);
-    });
   }
 
-  validateRouteById(routeId) {
-    let route = this.getRouteById(routeId);
-    if (route === null) {
-      return;
-    }
-
-    let context = { route: route };
-    let results = this.constraintManager.validateAll(context);
-
-    // Sende Ergebnis ans UI
-    this.eventBus.emit("route:validated", {
-      routeId: routeId,
-      isValid: results.isValid,
-      softViolations: results.softViolations,
-      hardViolations: results.hardViolations,
-      passed: results.passed
-    });
-  }
-
+  // Setzt ConstraintManager ein, um die Route zu validieren und speichert die Ergebnisse in der Route. Das UI kann sich die Ergebnisse dann über die Route und im UI-Panel anzeigen lassen. 
   validateAndStoreResults(route) {
     let context = { route: route };
     let results = this.constraintManager.validateAll(context);
     route.setValidationResults(results);
-  }
-
-  initRouteConstraints() {
-    // Nur hinzufügen wenn noch nicht vorhanden
-    let existingConstraints = this.constraintManager.getConstraints();
-    let hasReachability = false;
-    let hasStartPosition = false;
-    
-    for (let i = 0; i < existingConstraints.length; i++) {
-      if (existingConstraints[i].getName() === "Reachability") {
-        hasReachability = true;
-      }
-      if (existingConstraints[i].getName() === "StartPosition") {
-        hasStartPosition = true;
-      }
-    }
-    
-    if (hasReachability === false) {
-      this.constraintManager.addConstraint(new ReachabilityConstraint({
-        maxReach: 0.7,
-        maxHorizontalReach: 1.0,
-        maxVerticalStep: 0.8
-      }));
-    }
-    
-    if (hasStartPosition === false) {
-      this.constraintManager.addConstraint(new StartPositionConstraint({
-        maxStartHeight: 2.2
-      }));
-    }
   }
 
   toggleRouteVisibility(routeId) {
@@ -183,8 +127,6 @@ class RouteManager {
     }
     this.eventBus.emit("routes:updated", this.routes);
   }
-
-  // --- Getter / Setter ---
 
   getRouteByColor(color) {
     for (let i = 0; i < this.routes.length; i++) {

@@ -92,8 +92,6 @@ class InputManager extends Singleton {
     this.colliders = [];
   }
 
-  // --- Getter / Setter ---
-
   setColliders(colliders) {
     this.colliders = colliders;
   }

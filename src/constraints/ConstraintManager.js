@@ -1,5 +1,8 @@
 import Singleton from '../utils/Singleton.js';
 import EventBus from '../engine/EventBus.js';
+import ReachabilityConstraint from './route/ReachabilityConstraint.js';
+import StartPositionConstraint from './route/StartPositionConstraint.js';
+import { ROUTE_CONSTRAINTS } from '../constants/constraintConfig.js';
 
 /**
  * ConstraintManager - Verwaltet und validiert mehrere Constraints.
@@ -15,6 +18,34 @@ class ConstraintManager extends Singleton {
     
     this.constraints = [];
     this.eventBus = EventBus.getInstance();
+    this.initDefaultConstraints();
+  }
+
+  initDefaultConstraints() {
+    let config = ROUTE_CONSTRAINTS;
+
+    if (config.reachability.enabled) {
+      this.addConstraint(new ReachabilityConstraint({
+        maxReach: config.reachability.maxReach,
+        maxHorizontalReach: config.reachability.maxHorizontalReach,
+        maxVerticalStep: config.reachability.maxVerticalStep
+      }));
+    }
+
+    if (config.startPosition.enabled) {
+      this.addConstraint(new StartPositionConstraint({
+        maxStartHeight: config.startPosition.maxStartHeight
+      }));
+    }
+  }
+
+  hasConstraint(name) {
+    for (let i = 0; i < this.constraints.length; i++) {
+      if (this.constraints[i].getName() === name) {
+        return true;
+      }
+    }
+    return false;
   }
 
   addConstraint(constraint) {
@@ -57,6 +88,11 @@ class ConstraintManager extends Singleton {
       let constraint = this.constraints[i];
       let result = constraint.validate(context);
 
+      // Skip null results (precondition not met)
+      if (result === null) {
+        continue;
+      }
+
       if (result.valid) {
         let passedEntry = {
           name: constraint.getName(),
@@ -66,14 +102,16 @@ class ConstraintManager extends Singleton {
       } else if (constraint.isHard()) {
         let hardViolation = {
           name: constraint.getName(),
-          message: result.message
+          message: result.message,
+          violations: result.violations || null
         };
         results.hardViolations.push(hardViolation);
         results.isValid = false;
       } else {
         let softViolation = {
           name: constraint.getName(),
-          message: result.message
+          message: result.message,
+          violations: result.violations || null
         };
         results.softViolations.push(softViolation);
       }

@@ -18,25 +18,20 @@ class StartPositionConstraint extends Constraint {
     options = options || {};
     
     // Maximale Starthöhe (vom Boden erreichbar, ca. Armreichweite)
-    this.maxStartHeight = options.maxStartHeight || 1.9;
+    this.maxStartHeight = options.maxStartHeight;
   }
 
   validate(context) {
     let route = context.route;
-
-    if (route === null || route === undefined) {
-      return { valid: true, message: "Keine Route im Context" };
-    }
-
     let holds = route.getHolds();
 
     if (holds.length === 0) {
-      return { valid: true, message: "Keine Holds in der Route" };
+      return null;
     }
 
     // Finde den niedrigsten Hold (kleinste Y-Koordinate)
     let lowestHold = this.findLowestHold(holds);
-    let startHeight = lowestHold.getPosition().y;
+    let startHeight = lowestHold.getWorldPosition().y;
 
     // Prüfe maximale Starthöhe (erreichbar vom Boden)
     if (startHeight > this.maxStartHeight) {
@@ -44,7 +39,7 @@ class StartPositionConstraint extends Constraint {
       let maxCm = Math.round(this.maxStartHeight * 100);
       return {
         valid: false,
-        message: "Start-Hold zu hoch (" + heightCm + "cm > " + maxCm + "cm)"
+        message: "Start-Hold zu hoch (Maximalhöhe von " + maxCm + "cm überschritten)"
       };
     }
 
@@ -53,10 +48,10 @@ class StartPositionConstraint extends Constraint {
 
   findLowestHold(holds) {
     let lowest = holds[0];
-    let lowestY = lowest.getPosition().y;
+    let lowestY = lowest.getWorldPosition().y;
 
     for (let i = 1; i < holds.length; i++) {
-      let currentY = holds[i].getPosition().y;
+      let currentY = holds[i].getWorldPosition().y;
       if (currentY < lowestY) {
         lowest = holds[i];
         lowestY = currentY;
@@ -65,8 +60,6 @@ class StartPositionConstraint extends Constraint {
 
     return lowest;
   }
-
-  // --- Getter ---
 
   getMaxStartHeight() {
     return this.maxStartHeight;

@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import Hold from '../entities/Hold.js';
 import EventBus from '../engine/EventBus.js';
 import Singleton from '../utils/Singleton.js';
+import HoldCollisionConstraint from '../constraints/placement/HoldCollisionConstraint.js';
 
 class HoldManager extends Singleton {
 
@@ -26,6 +27,8 @@ class HoldManager extends Singleton {
     this.holdScale = 0.5;
     this.holdZOffset = 0.00;
     this.currentTool = "place";
+    this.wall = null;
+    this.collisionConstraint = new HoldCollisionConstraint();
 
     this.eventBus = EventBus.getInstance();
     this.subscribeToEvents();
@@ -35,9 +38,6 @@ class HoldManager extends Singleton {
     let self = this;
 
     this.eventBus.on("interaction:click", function(target) {
-      if (target === null || target === undefined) {
-        return;
-      }
       if (typeof target.isEmpty !== "function") {
         return;
       }
@@ -45,7 +45,9 @@ class HoldManager extends Singleton {
         self.placeHoldAt(target);
       }
       if (self.currentTool === "delete") {
-        self.removeHoldAt(target);
+        if (target.isEmpty() === false) {
+          self.removeHoldAt(target);
+        }
       }
     });
 
@@ -70,9 +72,6 @@ class HoldManager extends Singleton {
     });
 
     this.eventBus.on("interaction:hover", function(target) {
-      if (target === null || target === undefined) {
-        return;
-      }
       if (typeof target.isEmpty !== "function") {
         return;
       }
@@ -84,14 +83,14 @@ class HoldManager extends Singleton {
       if (self.currentTool === "delete") {
         if (target.isEmpty() === false) {
           self.highlightHoldForDelete(target);
+        } else {
+          // Leere Bohrung im Löschen-Modus: Hover-Effekt zurücksetzen
+          target.setHovered(false);
         }
       }
     });
 
     this.eventBus.on("interaction:hoverEnd", function(target) {
-      if (target === null || target === undefined) {
-        return;
-      }
       if (self.currentTool === "place") {
         self.hidePreview();
       }
@@ -141,6 +140,26 @@ class HoldManager extends Singleton {
 
     if (mesh !== null) {
       boltHole.getMesh().add(mesh);
+    }
+
+    // Check collision with existing holds
+    let context = {
+      newHold: hold,
+      existingHolds: this.getExistingHolds(boltHole)
+    };
+    let collisionResult = this.collisionConstraint.validate(context);
+    if (collisionResult.valid === false) {
+      // Revert placement
+      if (mesh !== null) {
+        boltHole.getMesh().remove(mesh);
+        hold.disposeMesh();
+      }
+      boltHole.removeHold();
+      this.eventBus.emit("placement:blocked", { 
+        message: collisionResult.message,
+        collidingHold: collisionResult.collidingHold
+      });
+      return;
     }
 
     this.eventBus.emit("hold:placed", { boltHole: boltHole });
@@ -227,6 +246,10 @@ class HoldManager extends Singleton {
   }
 
   showPreviewAt(boltHole) {
+    if (this.currentTool !== "place") {
+      return;
+    }
+    
     this.hidePreview();
 
     let boltHoleMesh = boltHole.getMesh();
@@ -274,8 +297,6 @@ class HoldManager extends Singleton {
     });
   }
 
-  // --- Getter / Setter ---
-
   getPrefab(typeId) {
     if (this.prefabs[typeId] === undefined) {
       return null;
@@ -305,6 +326,29 @@ class HoldManager extends Singleton {
 
   setSelectedColor(color) {
     this.selectedColor = color;
+  }
+
+  setWall(wall) {
+    this.wall = wall;
+  }
+
+  getExistingHolds(excludeBoltHole) {
+    let holds = [];
+    let boltHoles = this.wall.getAllBoltHoles();
+
+    for (let i = 0; i < boltHoles.length; i++) {
+      let boltHole = boltHoles[i];
+
+      if (boltHole === excludeBoltHole) {
+        continue;
+      }
+
+      if (boltHole.isEmpty() === false) {
+        holds.push(boltHole.getHold());
+      }
+    }
+
+    return holds;
   }
 }
 

@@ -1,15 +1,16 @@
+import * as THREE from 'three';
+import { MeshBVH } from 'three-mesh-bvh';
 import { Constraint, ConstraintType } from '../Constraint.js';
 
 /**
  * HoldCollisionConstraint (HARD)
  * 
  * Prüft ob ein neuer Hold physisch mit bestehenden Holds kollidieren würde.
- * Der Radius eines Holds hängt von seiner Scale ab.
+ * Nutzt MeshBVH für präzise Mesh-zu-Mesh Intersection.
  * 
  * Context: {
- *   targetPosition: { x, y, z },
- *   holdRadius: number,
- *   existingHolds: [{ position: { x, y, z }, radius: number }, ...]
+ *   newHold: Hold,
+ *   existingHolds: Hold[]
  * }
  */
 class HoldCollisionConstraint extends Constraint {
@@ -19,30 +20,20 @@ class HoldCollisionConstraint extends Constraint {
   }
 
   validate(context) {
-    let targetPosition = context.targetPosition;
-    let holdRadius = context.holdRadius;
+    let newHold = context.newHold;
     let existingHolds = context.existingHolds;
 
-    // Wenn keine Position oder keine existierenden Holds, ist alles OK
-    if (targetPosition === null || targetPosition === undefined) {
-      return { valid: true, message: "Keine Zielposition angegeben" };
-    }
-
-    if (existingHolds === null || existingHolds === undefined || existingHolds.length === 0) {
+    if (existingHolds.length === 0) {
       return { valid: true, message: "Keine existierenden Holds" };
     }
 
-    // Prüfe Kollision mit jedem existierenden Hold
     for (let i = 0; i < existingHolds.length; i++) {
-      let existing = existingHolds[i];
-      let distance = this.calculateDistance(targetPosition, existing.position);
-      let minDistance = holdRadius + existing.radius;
-
-      if (distance < minDistance) {
-        let overlapCm = Math.round((minDistance - distance) * 100);
+      let intersects = this.meshesIntersect(newHold, existingHolds[i]);
+      if (intersects) {
         return {
           valid: false,
-          message: "Hold würde mit bestehendem Hold kollidieren (Überlappung: " + overlapCm + "cm)"
+          message: "Hold kollidiert mit bestehendem Griff",
+          collidingHold: existingHolds[i]
         };
       }
     }
@@ -50,11 +41,48 @@ class HoldCollisionConstraint extends Constraint {
     return { valid: true, message: "Keine Kollision" };
   }
 
-  calculateDistance(pos1, pos2) {
-    let dx = pos1.x - pos2.x;
-    let dy = pos1.y - pos2.y;
-    let dz = pos1.z - pos2.z;
-    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  meshesIntersect(holdA, holdB) {
+    let meshesA = this.collectMeshes(holdA.getMesh());
+    let meshesB = this.collectMeshes(holdB.getMesh());
+
+    for (let a = 0; a < meshesA.length; a++) {
+      let meshA = meshesA[a];
+      meshA.updateMatrixWorld(true);
+      this.ensureBVH(meshA);
+
+      for (let b = 0; b < meshesB.length; b++) {
+        let meshB = meshesB[b];
+        meshB.updateMatrixWorld(true);
+        this.ensureBVH(meshB);
+
+        let matrixBtoA = new THREE.Matrix4()
+          .copy(meshA.matrixWorld)
+          .invert()
+          .multiply(meshB.matrixWorld);
+
+        if (meshA.geometry.boundsTree.intersectsGeometry(meshB.geometry, matrixBtoA)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  collectMeshes(object) {
+    let meshes = [];
+    object.traverse(function(child) {
+      if (child.isMesh) {
+        meshes.push(child);
+      }
+    });
+    return meshes;
+  }
+
+  ensureBVH(mesh) {
+    if (!mesh.geometry.boundsTree) {
+      mesh.geometry.boundsTree = new MeshBVH(mesh.geometry);
+    }
   }
 }
 

@@ -107,8 +107,6 @@ class Wall {
     this.wallElements.push(wallElement);
   }
 
-  // --- Getter / Setter ---
-
   getGroup() {
     return this.group;
   }

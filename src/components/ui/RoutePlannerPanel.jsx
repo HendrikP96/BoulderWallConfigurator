@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './RoutePlannerPanel.css'
+import EventBus from '../../engine/EventBus.js'
 
 /**
  * RoutePlannerPanel
@@ -7,10 +8,21 @@ import './RoutePlannerPanel.css'
  * Separates Panel links für die Routen-Planung.
  * Zeigt alle Routen (Farbe = Route), Constraint-Status und ermöglicht Bearbeitung.
  */
-function RoutePlannerPanel({ routes, selectedColor, onRouteNameChange, onSelectColor, onRouteClear, onRouteVisibilityToggle }) {
+function RoutePlannerPanel({ routes, selectedColor, onRouteNameChange, onSelectColor, onRouteClear, onRouteVisibilityToggle, onFinishPlanning }) {
   let [editingId, setEditingId] = useState(null);
   let [editName, setEditName] = useState('');
   let [expandedRouteId, setExpandedRouteId] = useState(null);
+  let eventBus = EventBus.getInstance();
+
+  function handleConstraintHover(violation) {
+    if (violation) {
+      eventBus.emit("constraint:highlight", { violation: violation });
+    }
+  }
+
+  function handleConstraintLeave() {
+    eventBus.emit("constraint:clearHighlight");
+  }
 
   function startEdit(route, e) {
     e.stopPropagation();
@@ -48,16 +60,6 @@ function RoutePlannerPanel({ routes, selectedColor, onRouteNameChange, onSelectC
     }
   }
 
-  function getDifficultyLabel(level) {
-    let labels = {
-      easy: "Leicht",
-      medium: "Mittel",
-      hard: "Schwer",
-      expert: "Experte"
-    };
-    return labels[level] || level;
-  }
-
   function renderConstraints(route) {
     let results = route.getValidationResults();
     
@@ -87,23 +89,61 @@ function RoutePlannerPanel({ routes, selectedColor, onRouteNameChange, onSelectC
     // Soft violations (warnings)
     for (let i = 0; i < results.softViolations.length; i++) {
       let item = results.softViolations[i];
-      items.push(
-        <div key={"soft-" + i} className="constraint-item warning">
-          <span className="constraint-icon">⚠</span>
-          <span>{item.message}</span>
-        </div>
-      );
+      
+      // Falls einzelne Violations vorhanden, zeige jede separat für Hover
+      if (item.violations && item.violations.length > 0) {
+        for (let j = 0; j < item.violations.length; j++) {
+          let violation = item.violations[j];
+          items.push(
+            <div 
+              key={"soft-" + i + "-" + j} 
+              className="constraint-item warning hoverable"
+              onMouseEnter={function() { handleConstraintHover(violation); }}
+              onMouseLeave={handleConstraintLeave}
+            >
+              <span className="constraint-icon">⚠</span>
+              <span>{violation.message}</span>
+            </div>
+          );
+        }
+      } else {
+        items.push(
+          <div key={"soft-" + i} className="constraint-item warning">
+            <span className="constraint-icon">⚠</span>
+            <span>{item.message}</span>
+          </div>
+        );
+      }
     }
 
     // Hard violations (errors)
     for (let i = 0; i < results.hardViolations.length; i++) {
       let item = results.hardViolations[i];
-      items.push(
-        <div key={"hard-" + i} className="constraint-item error">
-          <span className="constraint-icon">⛔</span>
-          <span>{item.message}</span>
-        </div>
-      );
+      
+      // Falls einzelne Violations vorhanden, zeige jede separat für Hover
+      if (item.violations && item.violations.length > 0) {
+        for (let j = 0; j < item.violations.length; j++) {
+          let violation = item.violations[j];
+          items.push(
+            <div 
+              key={"hard-" + i + "-" + j} 
+              className="constraint-item error hoverable"
+              onMouseEnter={function() { handleConstraintHover(violation); }}
+              onMouseLeave={handleConstraintLeave}
+            >
+              <span className="constraint-icon">⛔</span>
+              <span>{violation.message}</span>
+            </div>
+          );
+        }
+      } else {
+        items.push(
+          <div key={"hard-" + i} className="constraint-item error">
+            <span className="constraint-icon">⛔</span>
+            <span>{item.message}</span>
+          </div>
+        );
+      }
     }
 
     if (items.length === 0) {
@@ -194,11 +234,6 @@ function RoutePlannerPanel({ routes, selectedColor, onRouteNameChange, onSelectC
 
                 {isExpanded && (
                   <div className="route-planner-details">
-                    <div className="route-detail-row">
-                      <span className="detail-label">Schwierigkeit:</span>
-                      <span className="detail-value">{getDifficultyLabel(route.getDifficultyLevel())}</span>
-                    </div>
-
                     <div className="route-detail-section">
                       <span className="detail-section-title">Anforderungen:</span>
                       {renderConstraints(route)}
@@ -224,6 +259,15 @@ function RoutePlannerPanel({ routes, selectedColor, onRouteNameChange, onSelectC
           <span className="summary-divider">|</span>
           <span>{routes.filter(function(r) { return r.isComplete(); }).length} vollständig</span>
         </div>
+      )}
+
+      {routes.length > 0 && routes.every(function(r) { return r.isComplete(); }) && (
+        <button 
+          className="route-finish-btn"
+          onClick={function() { onFinishPlanning && onFinishPlanning(); }}
+        >
+          ✓ Routenplanung abschließen
+        </button>
       )}
     </div>
   );

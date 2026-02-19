@@ -6,6 +6,7 @@ import HoldManager from "../managers/HoldManager.js";
 import RouteManager from "../managers/RouteManager.js";
 import InputManager from "./InputManager.js";
 import DemoHall from "./DemoHall.js";
+import ConstraintVisualizer from "./ConstraintVisualizer.js";
 
 class SceneController {
 
@@ -23,9 +24,11 @@ class SceneController {
     this.holdManager = new HoldManager();
     this.wallBuilder = new WallBuilder();
     this.wall = this.wallBuilder.createSimpleWall(2, 3);
+    this.holdManager.setWall(this.wall);
     this.routeManager = new RouteManager(this.wall);
     this.inputManager = null;
     this.demoHall = new DemoHall();
+    this.constraintVisualizer = null;
 
     this.boundAnimate = this.animate.bind(this);
     this.boundOnResize = this.onResize.bind(this);
@@ -143,6 +146,7 @@ class SceneController {
     this.wall.createAllMeshes(this.textureLoader);
     this.scene.add(this.wall.getGroup());
     this.rebuildHoldMeshes();
+    this.constraintVisualizer = new ConstraintVisualizer(this.scene);
   }
 
   rebuildHoldMeshes() {

@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import SphereCollider from "../utils/SphereCollider.js";
-import HoldManager from "../managers/HoldManager.js";
 
 /**
  * BoltHole - Bohrloch auf einer Kletterwand. 
@@ -8,9 +7,9 @@ import HoldManager from "../managers/HoldManager.js";
  */
 class BoltHole {
 
-  constructor(position, hold) {
+  constructor(position) {
     this.position = position;
-    this.hold = hold || null;
+    this.hold = null;
     this.holeRadius = 0.004;    
     this.holeDepth = 0.005;
     this.hoverColor = "#4ECDC4";  
@@ -51,36 +50,14 @@ class BoltHole {
   }
 
   onClick() {
-    if (this.isEmpty() === false) {
-      return;
-    }
-
-    let holdManager = HoldManager.getInstance();
-    if (holdManager !== null) {
-      holdManager.placeHoldAt(this);
-    }
   }
 
   onHover() {
     this.setHovered(true);
-
-    if (this.isEmpty() === false) {
-      return;
-    }
-
-    let holdManager = HoldManager.getInstance();
-    if (holdManager !== null) {
-      holdManager.showPreviewAt(this);
-    }
   }
 
   onHoverExit() {
     this.setHovered(false);
-
-    let holdManager = HoldManager.getInstance();
-    if (holdManager !== null) {
-      holdManager.hidePreview();
-    }
   }
 
   setHovered(hovered) {
@@ -124,8 +101,6 @@ class BoltHole {
     }
   }
 
-  // --- Getter / Setter ---
-
   getMesh() {
     return this.mesh;
   }
@@ -136,6 +111,15 @@ class BoltHole {
 
   getPosition() {
     return this.position;
+  }
+
+  getWorldPosition() {
+    if (this.mesh === null) {
+      return this.position;
+    }
+    let worldPos = new THREE.Vector3();
+    this.mesh.getWorldPosition(worldPos);
+    return { x: worldPos.x, y: worldPos.y, z: worldPos.z };
   }
 
   setPosition(position) {

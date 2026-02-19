@@ -1,12 +1,5 @@
 import { getColorName } from '../constants/colors.js';
 
-let DifficultyLevel = {
-  EASY: "easy",
-  MEDIUM: "medium",
-  HARD: "hard",
-  EXPERT: "expert"
-};
-
 /**
  * BoulderRoute - Kletterroute bestehend aus mehreren Holds.
  * Eine Route ist eindeutig einer Farbe zugeordnet (1:1 Mapping).
@@ -17,7 +10,6 @@ class BoulderRoute {
     this.id = Date.now();
     this.color = color;
     this.name = name || this.generateDefaultName(color);
-    this.difficultyLevel = DifficultyLevel.MEDIUM;
     this.holds = [];
     this.visible = true;
     this.validationResults = null;
@@ -67,8 +59,6 @@ class BoulderRoute {
     return results.isValid && results.softViolations.length === 0;
   }
 
-  // --- Getter / Setter ---
-
   getId() {
     return this.id;
   }
@@ -87,14 +77,6 @@ class BoulderRoute {
 
   setColor(color) {
     this.color = color;
-  }
-
-  getDifficultyLevel() {
-    return this.difficultyLevel;
-  }
-
-  setDifficultyLevel(level) {
-    this.difficultyLevel = level;
   }
 
   getHolds() {
@@ -122,4 +104,4 @@ class BoulderRoute {
   }
 }
 
-export { BoulderRoute, DifficultyLevel };
+export { BoulderRoute };

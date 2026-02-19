@@ -3,15 +3,13 @@ import { Constraint, ConstraintType } from '../Constraint.js';
 /**
  * ReachabilityConstraint (SOFT)
  * 
- * Prüft ob alle Holds einer Route erreichbar sind.
- * Checks:
- * - 3D-Distanz zwischen aufeinanderfolgenden Holds
- * - Horizontale Spannweite (deltaX) für Armreichweite
- * - Vertikale Distanz (deltaY) für Schritterhöhung
+ * Prüft ob ein kletterbarer Pfad vom untersten zum obersten Griff existiert.
+ * Nutzt Graph-Traversierung (BFS).
  * 
- * Context: {
- *   route: BoulderRoute  // Route mit getHolds()
- * }
+ * Logik:
+ * 1. Baue Erreichbarkeits-Graph: Welche Griffe können voneinander erreicht werden?
+ * 2. Finde Pfad vom niedrigsten zum höchsten Griff
+ * 3. Wenn kein Pfad existiert: Zeige isolierte oder nicht erreichbare Griffe
  */
 class ReachabilityConstraint extends Constraint {
 
@@ -20,97 +18,252 @@ class ReachabilityConstraint extends Constraint {
     
     options = options || {};
     
-    // Maximum 3D-Distanz zwischen zwei Holds (Armspanne diagonal)
-    this.maxReach = options.maxReach || 0.7;
+    // Maximale 3D-Distanz zwischen zwei Griffen
+    this.maxReach = options.maxReach;
     
-    // Maximum horizontale Distanz (Armspanne seitlich)
-    this.maxHorizontalReach = options.maxHorizontalReach || 1.0;
+    // Maximale horizontale Distanz (seitliche Armreichweite)
+    this.maxHorizontalReach = options.maxHorizontalReach;
     
-    // Maximum vertikale Distanz nach oben (Schritterhöhung)
-    this.maxVerticalStep = options.maxVerticalStep || 0.8;
+    // Maximaler vertikaler Schritt nach oben
+    this.maxVerticalStep = options.maxVerticalStep;
   }
 
   validate(context) {
     let route = context.route;
-
-    if (route === null || route === undefined) {
-      return { valid: true, message: "Keine Route im Context" };
-    }
-
     let holds = route.getHolds();
 
     if (holds.length < 2) {
-      return { valid: true, message: "Weniger als 2 Holds - nicht prüfbar" };
+      return null;  // Vorbedingung nicht erfüllt, kein Ergebnis
     }
 
-    // Sortiere Holds nach Höhe (Y-Koordinate) für logische Reihenfolge
+    // Sortiere nach Höhe um Start und Ziel zu finden
     let sortedHolds = this.sortByHeight(holds);
+    let startHold = sortedHolds[0];           // Niedrigster Griff
+    let topHold = sortedHolds[sortedHolds.length - 1];  // Höchster Griff
 
-    // Prüfe jeden Übergang zwischen aufeinanderfolgenden Holds
-    let violations = [];
+    // Baue Erreichbarkeits-Graph: Für jeden Griff eine Liste erreichbarer Nachbarn
+    let reachabilityGraph = this.buildReachabilityGraph(holds);
 
-    for (let i = 0; i < sortedHolds.length - 1; i++) {
-      let currentHold = sortedHolds[i];
-      let nextHold = sortedHolds[i + 1];
+    // Finde Pfad vom Start zum Top via BFS
+    let pathResult = this.findPath(holds, reachabilityGraph, startHold, topHold);
 
-      let currentPos = currentHold.getPosition();
-      let nextPos = nextHold.getPosition();
+    if (pathResult.found) {
+      return { 
+        valid: true, 
+        message: "Route kletterbar (Pfad mit " + pathResult.path.length + " Griffen gefunden)" 
+      };
+    }
 
-      let result = this.checkTransition(currentPos, nextPos, i + 1);
-      
-      if (result.valid === false) {
-        violations.push(result.message);
+    // Kein Pfad gefunden - analysiere warum
+    let violations = this.analyzeUnreachableHolds(holds, reachabilityGraph, startHold);
+
+    if (violations.length > 0) {
+      let messages = [];
+      for (let i = 0; i < violations.length; i++) {
+        messages.push(violations[i].message);
+      }
+      return {
+        valid: false,
+        message: messages.join("; "),
+        violations: violations
+      };
+    }
+
+    // Fallback: Generische Fehlermeldung
+    return {
+      valid: false,
+      message: "Kein kletterbarer Pfad vom Start zum Top gefunden"
+    };
+  }
+
+  /**
+   * Baut einen Erreichbarkeits-Graphen.
+   * Für jeden Griff wird geprüft, welche anderen Griffe erreichbar sind.
+   * Ergebnis: Map von Hold-Index zu Array von erreichbaren Hold-Indizes
+   */
+  buildReachabilityGraph(holds) {
+    let graph = {};
+
+    for (let i = 0; i < holds.length; i++) {
+      graph[i] = [];
+      let posA = holds[i].getWorldPosition();
+
+      for (let j = 0; j < holds.length; j++) {
+        if (i === j) continue;
+
+        let posB = holds[j].getWorldPosition();
+        
+        // Prüfe ob Übergang möglich ist
+        if (this.canReach(posA, posB)) {
+          graph[i].push(j);
+        }
       }
     }
 
-    if (violations.length > 0) {
-      return {
-        valid: false,
-        message: violations.join("; ")
-      };
-    }
-
-    return { valid: true, message: "Alle Holds erreichbar" };
+    return graph;
   }
 
-  checkTransition(pos1, pos2, transitionIndex) {
+  /**
+   * Prüft ob ein Übergang zwischen zwei Positionen möglich ist.
+   * Gibt true/false zurück (keine Details).
+   */
+  canReach(pos1, pos2) {
     let dx = Math.abs(pos2.x - pos1.x);
-    let dy = pos2.y - pos1.y;  // Positiv = nach oben
+    let dy = pos2.y - pos1.y;
     let dz = Math.abs(pos2.z - pos1.z);
-
     let distance3D = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-    // Prüfe 3D-Distanz
+    // 3D-Distanz prüfen
     if (distance3D > this.maxReach) {
-      let distCm = Math.round(distance3D * 100);
-      let maxCm = Math.round(this.maxReach * 100);
-      return {
-        valid: false,
-        message: "Übergang " + transitionIndex + ": 3D-Abstand zu groß (" + distCm + "cm > " + maxCm + "cm)"
-      };
+      return false;
     }
 
-    // Prüfe horizontale Reichweite
+    // Horizontale Reichweite prüfen
     if (dx > this.maxHorizontalReach) {
-      let dxCm = Math.round(dx * 100);
-      let maxCm = Math.round(this.maxHorizontalReach * 100);
-      return {
-        valid: false,
-        message: "Übergang " + transitionIndex + ": Horizontaler Abstand zu groß (" + dxCm + "cm > " + maxCm + "cm)"
-      };
+      return false;
     }
 
-    // Prüfe vertikale Schritterhöhung (nur nach oben)
+    // Vertikaler Schritt nach oben prüfen (runter ist immer OK)
     if (dy > this.maxVerticalStep) {
-      let dyCm = Math.round(dy * 100);
-      let maxCm = Math.round(this.maxVerticalStep * 100);
-      return {
-        valid: false,
-        message: "Übergang " + transitionIndex + ": Vertikaler Schritt zu hoch (" + dyCm + "cm > " + maxCm + "cm)"
-      };
+      return false;
     }
 
-    return { valid: true };
+    return true;
+  }
+
+  /**
+   * Findet einen Pfad vom Start-Griff zum Ziel-Griff via BFS.
+   * BFS findet den kürzesten Pfad (wenigste Züge).
+   */
+  findPath(holds, graph, startHold, targetHold) {
+    let startIndex = holds.indexOf(startHold);
+    let targetIndex = holds.indexOf(targetHold);
+
+    // BFS-Queue: Jeder Eintrag ist [aktueller Index, bisheriger Pfad]
+    let queue = [[startIndex, [startIndex]]];
+    let visited = {};
+    visited[startIndex] = true;
+
+    while (queue.length > 0) {
+      let current = queue.shift();
+      let currentIndex = current[0];
+      let currentPath = current[1];
+
+      // Ziel erreicht?
+      if (currentIndex === targetIndex) {
+        // Wandle Index-Pfad in Hold-Pfad um
+        let holdPath = [];
+        for (let i = 0; i < currentPath.length; i++) {
+          holdPath.push(holds[currentPath[i]]);
+        }
+        return { found: true, path: holdPath };
+      }
+
+      // Alle erreichbaren Nachbarn durchgehen
+      let neighbors = graph[currentIndex];
+      for (let i = 0; i < neighbors.length; i++) {
+        let neighborIndex = neighbors[i];
+        
+        if (!visited[neighborIndex]) {
+          visited[neighborIndex] = true;
+          let newPath = currentPath.slice();
+          newPath.push(neighborIndex);
+          queue.push([neighborIndex, newPath]);
+        }
+      }
+    }
+
+    // Kein Pfad gefunden
+    return { found: false, path: [] };
+  }
+
+  /**
+   * Analysiert welche Griffe nicht erreichbar sind und warum.
+   * Gibt detaillierte Violations für das UI zurück.
+   */
+  analyzeUnreachableHolds(holds, graph, startHold) {
+    let violations = [];
+    let startIndex = holds.indexOf(startHold);
+
+    // Finde alle vom Start aus erreichbaren Griffe (BFS)
+    let reachableFromStart = {};
+    reachableFromStart[startIndex] = true;
+    let queue = [startIndex];
+
+    while (queue.length > 0) {
+      let currentIndex = queue.shift();
+      let neighbors = graph[currentIndex];
+
+      for (let i = 0; i < neighbors.length; i++) {
+        let neighborIndex = neighbors[i];
+        if (!reachableFromStart[neighborIndex]) {
+          reachableFromStart[neighborIndex] = true;
+          queue.push(neighborIndex);
+        }
+      }
+    }
+
+    // Finde isolierte Griffe (nicht vom Start erreichbar)
+    for (let i = 0; i < holds.length; i++) {
+      if (!reachableFromStart[i]) {
+        let hold = holds[i];
+        let pos = hold.getWorldPosition();
+        let heightCm = Math.round(pos.y * 100);
+
+        // Finde den nächsten erreichbaren Griff für die Visualisierung
+        let nearestReachable = this.findNearestReachableHold(holds, i, reachableFromStart);
+
+        if (nearestReachable !== null) {
+          let nearestPos = nearestReachable.hold.getWorldPosition();
+          let maxReachCm = Math.round(this.maxReach * 100);
+
+          violations.push({
+            valid: false,
+            message: "Griff ist nicht erreichbar (max. " + maxReachCm + "cm Reichweite überschritten)",
+            affectedHolds: [nearestReachable.hold, hold],
+            lineType: "direct",
+            positions: [nearestPos, pos]
+          });
+        } else {
+          let maxReachCm = Math.round(this.maxReach * 100);
+          violations.push({
+            valid: false,
+            message: "Griff ist isoliert (max. " + maxReachCm + "cm Reichweite überschritten)",
+            affectedHolds: [hold],
+            lineType: "direct",
+            positions: [pos, pos]
+          });
+        }
+      }
+    }
+
+    return violations;
+  }
+
+  /**
+   * Findet den nächsten Griff aus der erreichbaren Menge zu einem isolierten Griff.
+   */
+  findNearestReachableHold(holds, isolatedIndex, reachableSet) {
+    let isolatedPos = holds[isolatedIndex].getWorldPosition();
+    let nearest = null;
+    let nearestDistance = Infinity;
+
+    for (let i = 0; i < holds.length; i++) {
+      if (reachableSet[i]) {
+        let pos = holds[i].getWorldPosition();
+        let dx = pos.x - isolatedPos.x;
+        let dy = pos.y - isolatedPos.y;
+        let dz = pos.z - isolatedPos.z;
+        let distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearest = { hold: holds[i], distance: distance };
+        }
+      }
+    }
+
+    return nearest;
   }
 
   sortByHeight(holds) {
@@ -120,13 +273,11 @@ class ReachabilityConstraint extends Constraint {
     }
 
     holdsCopy.sort(function(a, b) {
-      return a.getPosition().y - b.getPosition().y;
+      return a.getWorldPosition().y - b.getWorldPosition().y;
     });
 
     return holdsCopy;
   }
-
-  // --- Getter ---
 
   getMaxReach() {
     return this.maxReach;

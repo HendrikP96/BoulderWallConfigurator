@@ -4,8 +4,8 @@ class Hold {
 
   constructor(typeId, color, scale) {
     this.typeId = typeId;
-    this.color = color || "#ffffff";
-    this.scale = scale || 0.5;
+    this.color = color;
+    this.scale = scale;
     this.mesh = null;
   }
 
@@ -49,8 +49,6 @@ class Hold {
       this.mesh = null;
     }
   }
-
-  // --- Getter / Setter ---
 
   getMesh() {
     return this.mesh;

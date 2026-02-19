@@ -100,8 +100,6 @@ class WallElement {
     }
   }
 
-  // --- Getter / Setter ---
-
   getGroup() {
     return this.group;
   }

@@ -286,6 +286,16 @@
   text-align: center;
 }
 
+.constraint-item.hoverable {
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.constraint-item.hoverable:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(4px);
+}
+
 /* =========================================
    Summary Footer
    ========================================= */
@@ -371,4 +381,27 @@
 
 .route-planner-visibility-btn:hover {
   color: white;
+}
+
+/* =========================================
+   Route Finish Button
+   ========================================= */
+
+.route-finish-btn {
+  width: 100%;
+  padding: 12px 16px;
+  margin-top: 12px;
+  background: rgba(46, 204, 113, 0.2);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 8px;
+  color: #2ecc71;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.route-finish-btn:hover {
+  background: rgba(46, 204, 113, 0.3);
+  border-color: #2ecc71;
 }
