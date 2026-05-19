@@ -515,12 +515,6 @@ src/
 }
 ```
 
-### Weitere Constraints
-
-- **TopHoldConstraint** - Prüft ob höchster Griff als Ziel geeignet
-- **HoldDensityConstraint** - Mindestanzahl Griffe pro Route
-- **SymmetryConstraint** - Warnung bei stark asymmetrischen Routen
-
 ### Undo/Redo
 
 Command-Pattern für Aktions-History:
@@ -542,23 +536,3 @@ npm run dev
 ```
 
 ---
-
-## Interview-Cheatsheet
-
-**"Warum EventBus statt Props?"**
-→ Entkopplung. UI und Engine kennen sich nicht. Neue Features können Events abonnieren.
-
-**"Warum BFS für Erreichbarkeit?"**
-→ Findet kürzesten Pfad (wenigste Züge). O(n) bei Graph bereits gebaut.
-
-**"Warum Mesh-Kollision statt Bounding Box?"**
-→ Holds sind unregelmäßig geformt. Bounding Box hätte viele false positives.
-
-**"Warum Singleton für Manager?"**
-→ Zentrale Instanz, kein Durchreichen durch Komponenten, konsistenter Zustand.
-
-**"Hard vs Soft Constraints?"**
-→ Hard blockiert (Kollision macht keinen Sinn). Soft warnt (Route schwierig aber möglich).
-
-**"Warum let statt const überall?"**
-→ Stilentscheidung für Konsistenz. Weniger cognitive load.
